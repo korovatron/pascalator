@@ -36,9 +36,13 @@ export class Renderer {
     // blits this buffer then draws the (cheap, animated) highlight on top of it.
     this.staticCanvas = document.createElement("canvas");
     this.staticCtx = this.staticCanvas.getContext("2d");
+    // Per-cell label text/font-size fit, keyed "n,k", from the last settled (non-interacting)
+    // render - see _renderLargeTier. Cell geometry/colour is always recomputed live, but the
+    // (costlier) label fit is only recomputed on settle and reused meanwhile.
+    this.labelCache = new Map();
   }
 
-  /** Renders the tiered hex/pixel content into the offscreen buffer. Call only when the view changes. */
+  /** Renders the tiered hex/pixel content into the offscreen buffer. Called every frame while dirty (including throughout a pan/zoom gesture). */
   renderStatic(viewport, highlightSelection) {
     const { canvas, staticCanvas, staticCtx: ctx } = this;
     if (staticCanvas.width !== canvas.width || staticCanvas.height !== canvas.height) {
@@ -228,7 +232,7 @@ export class Renderer {
   _renderLargeTier(ctx, viewport, cssWidth, cssHeight) {
     const { scale } = viewport;
     const { nMin, nMax } = this._visibleRowRange(viewport, cssHeight);
-    const showLabels = !viewport.isInteracting;
+    const interacting = viewport.isInteracting;
 
     // Available space inside the hex for text, with a comfortable margin either side.
     const availableWidth = SQRT3 * scale * 0.72;
@@ -237,7 +241,11 @@ export class Renderer {
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.lineWidth = 1;
-    if (showLabels) ctx.font = `${FONT_MEASURE_SIZE}px ${LABEL_FONT_FAMILY}`;
+    ctx.font = `${FONT_MEASURE_SIZE}px ${LABEL_FONT_FAMILY}`;
+
+    // Label text/fit only gets recomputed on settle (see below); while interacting, the
+    // cache from the last settle is reused, so it's left untouched here.
+    if (!interacting) this.labelCache.clear();
 
     for (let n = nMin; n <= nMax; n++) {
       const { kMin, kMax } = this._visibleKRange(n, viewport, cssWidth);
@@ -257,13 +265,22 @@ export class Renderer {
         ctx.strokeStyle = "rgba(10, 10, 20, 0.5)";
         ctx.stroke();
 
-        if (showLabels) {
+        const key = `${n},${k}`;
+        let entry = interacting ? this.labelCache.get(key) : null;
+        if (interacting && !entry) continue; // newly-exposed cell - leave blank until settle
+        if (!entry) {
           const { label, fontSize } = this._fitCellLabel(ctx, n, k, availableWidth, availableHeight);
-          ctx.font = `${fontSize}px ${LABEL_FONT_FAMILY}`;
-          ctx.fillStyle = magnitudeIsLight(t) ? "#0b0d16" : "#f0f0f5";
-          ctx.fillText(label, cx, cy);
-          ctx.font = `${FONT_MEASURE_SIZE}px ${LABEL_FONT_FAMILY}`; // restore for the next cell's measureText
+          entry = { label, fontSize, scale };
+          this.labelCache.set(key, entry);
         }
+
+        // While interacting, the cached fit was sized for a possibly different scale -
+        // rescale it so the label still tracks the hex's live on-screen size.
+        const drawFontSize = interacting ? entry.fontSize * (scale / entry.scale) : entry.fontSize;
+        ctx.font = `${drawFontSize}px ${LABEL_FONT_FAMILY}`;
+        ctx.fillStyle = magnitudeIsLight(t) ? "#0b0d16" : "#f0f0f5";
+        ctx.fillText(entry.label, cx, cy);
+        ctx.font = `${FONT_MEASURE_SIZE}px ${LABEL_FONT_FAMILY}`; // restore for the next cell's measureText
       }
     }
   }
