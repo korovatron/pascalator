@@ -3,7 +3,11 @@ import { getExactDigits, hslToRgb, log10Binomial, magnitudeColor, magnitudeIsLig
 
 // Level-of-detail thresholds, expressed as on-screen hex radius in pixels
 // (== viewport.scale).
-const LARGE_MIN_SCALE = 22; // hexes drawn individually, with labels
+// LARGE_MIN_SCALE is the scale below which even a single-digit label can never reach
+// MIN_FONT_SIZE (height-constrained: scale*0.95 < MIN_FONT_SIZE), so there's no point
+// attempting per-cell label fitting below it - which cells actually show a label within
+// this tier is still decided individually, per cell, by _fitCellLabel.
+const LARGE_MIN_SCALE = 9; // hexes drawn individually, with labels attempted per cell
 const MEDIUM_MIN_SCALE = 2.5; // hexes drawn individually, fill only (batched)
 // below MEDIUM_MIN_SCALE: switch to a per-pixel magnitude field
 
@@ -266,13 +270,15 @@ export class Renderer {
         ctx.stroke();
 
         const key = `${n},${k}`;
-        let entry = interacting ? this.labelCache.get(key) : null;
-        if (interacting && !entry) continue; // newly-exposed cell - leave blank until settle
-        if (!entry) {
-          const { label, fontSize } = this._fitCellLabel(ctx, n, k, availableWidth, availableHeight);
-          entry = { label, fontSize, scale };
-          this.labelCache.set(key, entry);
+        let entry = this.labelCache.get(key);
+        if (!entry && !interacting) {
+          const fit = this._fitCellLabel(ctx, n, k, availableWidth, availableHeight);
+          if (fit) {
+            entry = { label: fit.label, fontSize: fit.fontSize, scale };
+            this.labelCache.set(key, entry);
+          }
         }
+        if (!entry) continue; // no legible label at this scale for this cell (too many digits), or not yet computed this settle - leave blank
 
         // While interacting, the cached fit was sized for a possibly different scale -
         // rescale it so the label still tracks the hex's live on-screen size.
@@ -291,7 +297,10 @@ export class Renderer {
    * size. Scientific notation is tried at progressively fewer significant
    * figures until it fits at a comfortable size. Values are truncated, not
    * rounded (a deliberate simplification - the exact value is always
-   * available in the info card).
+   * available in the info card). Returns null if the number has too many
+   * digits to fit legibly at the current scale even in scientific notation -
+   * this is decided per cell (based on that cell's own digit count), not by
+   * a single all-or-nothing zoom-level cutoff.
    */
   _fitCellLabel(ctx, n, k, availableWidth, availableHeight) {
     const fontSizeToFit = (text) => {
@@ -303,25 +312,30 @@ export class Renderer {
     const exactDigits = getExactDigits(n, k);
     const log10Value = exactDigits ? null : log10Binomial(n, k);
 
-    let sciLabel, sciFontSize;
+    let bestLabel = null;
+    let bestFontSize = 0;
     for (let sigFigs = 4; sigFigs >= 1; sigFigs--) {
       const text = exactDigits
         ? scientificFromDigitString(exactDigits, sigFigs)
         : scientificFromLog10(log10Value, sigFigs);
-      sciLabel = text;
-      sciFontSize = fontSizeToFit(text);
-      if (sciFontSize >= MIN_FONT_SIZE || sigFigs === 1) break;
+      const fontSize = fontSizeToFit(text);
+      if (fontSize > bestFontSize) {
+        bestLabel = text;
+        bestFontSize = fontSize;
+      }
+      if (bestFontSize >= MIN_FONT_SIZE) break;
     }
-    sciFontSize = Math.max(sciFontSize, MIN_FONT_SIZE);
 
     if (exactDigits) {
       const fullFontSize = fontSizeToFit(exactDigits);
-      // Only prefer the full integer when it's at least as legible as scientific notation.
-      if (fullFontSize >= sciFontSize) {
-        return { label: exactDigits, fontSize: fullFontSize };
+      // Prefer the full integer whenever it's at least as legible as the best scientific fit.
+      if (fullFontSize >= bestFontSize) {
+        bestLabel = exactDigits;
+        bestFontSize = fullFontSize;
       }
     }
-    return { label: sciLabel, fontSize: sciFontSize };
+
+    return bestFontSize >= MIN_FONT_SIZE ? { label: bestLabel, fontSize: bestFontSize } : null;
   }
 
   _renderMediumTier(ctx, viewport, cssWidth, cssHeight) {
