@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pascalator - interactive Pascal's triangle explorer</title>
+<link rel="stylesheet" href="src/style.css" />
+</head>
+<body>
+  <div id="app">
+    <canvas id="triangleCanvas"></canvas>
+
+    <header id="toolbar">
+      <h1>Pascalator</h1>
+      <button id="resetViewBtn" title="Reset view">Reset view</button>
+    </header>
+
+    <div id="infoCard" class="hidden">
+      <div class="info-row"><span class="info-label">Row (n)</span><span id="infoN"></span></div>
+      <div class="info-row"><span class="info-label">Position (k)</span><span id="infoK"></span></div>
+      <div class="info-row"><span class="info-label">Digits</span><span id="infoDigits"></span></div>
+      <div class="info-row"><span class="info-label">Value</span></div>
+      <div id="infoValue" class="info-value"></div>
+      <div id="infoSequence" class="info-sequence hidden"></div>
+      <div id="infoNote" class="info-note"></div>
+    </div>
+
+    <div id="contextMenu" class="hidden">
+      <button data-highlight="cell">Highlight cell</button>
+      <button data-highlight="row">Highlight row</button>
+      <button data-highlight="diagSwNe">Highlight SW&ndash;NE diagonal</button>
+      <button data-highlight="diagNwSe">Highlight NW&ndash;SE diagonal</button>
+    </div>
+  </div>
+
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
