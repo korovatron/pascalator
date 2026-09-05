@@ -238,7 +238,7 @@ button:hover {
   bottom: calc(16px + var(--safe-area-bottom, 0px));
   right: calc(16px + var(--safe-area-right, 0px));
   width: 420px;
-  max-height: calc(100lvh - 32px - var(--safe-area-bottom, 0px));
+  max-height: calc(100dvh - 32px - var(--safe-area-bottom, 0px)); /* dvh (not lvh) so this tracks Safari's currently-visible address bar and doesn't get clipped underneath it */
   overflow-y: auto;
   background: rgba(18, 20, 32, 0.96);
   border: 1px solid #22e8f0;
@@ -420,7 +420,7 @@ button:hover {
 
 #helpModalCard {
   max-width: min(420px, calc(100vw - 48px));
-  max-height: calc(100lvh - 48px);
+  max-height: calc(100dvh - 48px); /* dvh (not lvh) so this tracks Safari's currently-visible address bar and doesn't get clipped underneath it */
   overflow-y: auto;
   background: rgba(18, 20, 32, 0.98);
   border: 1px solid #22e8f0;
