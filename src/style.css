@@ -17,7 +17,7 @@ html, body {
   width: 100%;
   height: 100%;
   height: 100vh;
-  height: var(--actual-vh, 100vh); /* corrected at runtime on iOS PWA - see fixIOSViewportBug() in main.js */
+  height: 100dvh; /* modern dynamic-viewport-height unit - see main.js for why the old JS-based --actual-vh workaround was removed */
   overflow: hidden;
   background: #000000;
   color: #e8e8f0;
@@ -29,7 +29,7 @@ html, body {
   inset: 0;
   width: 100vw;
   height: 100vh;
-  height: var(--actual-vh, 100vh); /* iOS PWA standalone-mode fix - see fixIOSViewportBug() in main.js */
+  height: 100dvh; /* modern dynamic-viewport-height unit - see main.js for why the old JS-based --actual-vh workaround was removed */
 }
 
 #triangleCanvas {
@@ -238,7 +238,7 @@ button:hover {
   bottom: calc(16px + var(--safe-area-bottom, 0px));
   right: calc(16px + var(--safe-area-right, 0px));
   width: 420px;
-  max-height: calc(var(--actual-vh, 100vh) - 32px - var(--safe-area-bottom, 0px));
+  max-height: calc(100dvh - 32px - var(--safe-area-bottom, 0px));
   overflow-y: auto;
   background: rgba(18, 20, 32, 0.96);
   border: 1px solid #22e8f0;
@@ -420,7 +420,7 @@ button:hover {
 
 #helpModalCard {
   max-width: min(420px, calc(100vw - 48px));
-  max-height: calc(var(--actual-vh, 100vh) - 48px);
+  max-height: calc(100dvh - 48px);
   overflow-y: auto;
   background: rgba(18, 20, 32, 0.98);
   border: 1px solid #22e8f0;

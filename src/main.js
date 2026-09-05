@@ -4,138 +4,16 @@ import { InfoCard } from "./infocard.js";
 import { pixelToHex } from "./hexgeom.js";
 import { shadingPatternName } from "./triangle.js";
 
-// iOS can misreport window.innerHeight in standalone/full-screen PWA mode (especially right
-// after launch, or rotating back to portrait), leaving a gap of raw page background at the
-// bottom of the screen - correcting a --actual-vh custom property a few times after
-// launch/rotation/resume (used by #app in style.css) avoids it. Ported from Graphiti (same
-// author) - see temp/graphiti/ios-pwa-bottom-bar-fix.md for the full writeup. Called first,
-// before anything else, since the very first paint needs the corrected height too.
-function fixIOSViewportBug() {
-  const isPWA =
-    window.matchMedia("(display-mode: standalone)").matches ||
-    window.matchMedia("(display-mode: fullscreen)").matches ||
-    window.navigator.standalone === true;
-  const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-  let lastKnownHeight = 0;
-
-  const setActualViewportHeight = () => {
-    let viewportHeight = window.innerHeight;
-
-    // iOS PWA/standalone mode can under-report the height by ~59px (iPhone) / ~32px (iPad)
-    // in portrait - compensate up to the real screen height when the shortfall looks like
-    // this specific bug (small enough that it's not just a genuinely short window). iOS
-    // calculates safe-area-inset-top asynchronously after launch, so --safe-area-top (see
-    // style.css, needs viewport-fit=cover to be non-zero at all) may still read 0 here on
-    // the earliest staggered check - remainingShortfall re-tests after accounting for it.
-    // NOTE: tried unconditionally forcing screenPortraitHeight regardless of window.innerHeight
-    // (skipping this detection entirely) - that made things strictly worse (bug on every load,
-    // not just repeat navigation, and twice the gap), proving window.innerHeight is NOT always
-    // supposed to equal the full screen height in standalone mode - so this heuristic, however
-    // imperfect, needs to stay.
-    if (isIOS && isPWA && window.innerHeight > window.innerWidth) {
-      const screenPortraitHeight = Math.max(window.screen.height, window.screen.width);
-      const difference = screenPortraitHeight - viewportHeight;
-
-      if (difference > 15 && difference <= 180) {
-        const safeTopPx = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--safe-area-top")) || 0;
-        const heightWithSafeTop = viewportHeight + safeTopPx;
-        const remainingShortfall = screenPortraitHeight - heightWithSafeTop;
-
-        if (remainingShortfall > 8) viewportHeight = screenPortraitHeight;
-        else if (safeTopPx > 0) viewportHeight = heightWithSafeTop;
-        else viewportHeight = screenPortraitHeight;
-      }
-    }
-
-    document.documentElement.style.setProperty("--actual-vh", `${viewportHeight}px`);
-
-    // Only re-trigger canvas/viewport layout if the height actually changed meaningfully -
-    // avoids redundant resets from the staggered re-checks below settling on the same value.
-    if (lastKnownHeight > 0 && Math.abs(viewportHeight - lastKnownHeight) > 30) {
-      window.dispatchEvent(new Event("resize"));
-    }
-    lastKnownHeight = viewportHeight;
-  };
-
-  const scheduleUpdates = (delays) => {
-    for (const delay of delays) setTimeout(setActualViewportHeight, delay);
-  };
-
-  // The height-comparison logic above only helps when window.innerHeight is *misreporting* a
-  // height that's actually available - but on some in-app navigations the WKWebView's own
-  // native frame is genuinely the wrong (short) size at the OS level, and window.innerHeight
-  // faithfully (if unhelpfully) reports that same wrong value, giving nothing for the
-  // comparison above to detect. Confirmed manually: rotating to landscape and back to portrait
-  // always fixes it, because that forces iOS to redo a full native relayout of the WKWebView's
-  // frame for the new orientation. We can't trigger a real rotation from JS, but briefly
-  // touching the viewport meta tag's content is a long-standing trick for coaxing WebKit into
-  // recomputing its viewport/frame geometry outside of an actual zoom/rotation gesture - worth
-  // trying here since simply re-running the measurement/correction logic did not help.
-  const nudgeNativeLayout = () => {
-    const meta = document.querySelector('meta[name="viewport"]');
-    if (!meta) return;
-    const original = meta.getAttribute("content");
-    meta.setAttribute("content", `${original}, shrink-to-fit=no`);
-    requestAnimationFrame(() => meta.setAttribute("content", original));
-  };
-
-  // Cold launch can settle on the *correct* --actual-vh from the very first synchronous
-  // call (before isIOS+isPWA's own eventual settling), so the >30px-change guard above
-  // never fires again and the canvas never gets told to re-measure against it - only a
-  // genuine native resize/orientationchange (e.g. rotating and back) was forcing that
-  // re-measure, which is exactly the symptom this unconditionally re-dispatches a resize
-  // event a few times regardless of whether --actual-vh itself changed.
-  const scheduleUnconditionalLayoutRefreshes = (delays) => {
-    if (!isIOS || !isPWA) return;
-    for (const delay of delays) {
-      setTimeout(() => {
-        nudgeNativeLayout();
-        window.dispatchEvent(new Event("resize"));
-      }, delay);
-    }
-  };
-
-  // iOS doesn't always have the correct value ready right at launch, so re-check a few
-  // times over the next ~2.4s rather than relying on a single measurement.
-  setActualViewportHeight();
-  scheduleUpdates([50, 100, 200, 350, 600, 900, 1300, 1800, 2400]);
-  scheduleUnconditionalLayoutRefreshes([350, 900, 1800, 2400]);
-
-  window.addEventListener("resize", setActualViewportHeight);
-  // Also nudge on orientation change - not just re-checking the height: an orientation change
-  // is exactly the kind of transition where WebKit's hit-testing geometry (which routes taps
-  // to elements) can lag behind its own visual repaint, leaving on-screen buttons visually
-  // correct but unresponsive to taps (suspected same root cause as the bottom-bar bug).
-  window.addEventListener("orientationchange", () => {
-    scheduleUpdates([50, 100, 200, 350, 600, 900, 1300, 1800]);
-    scheduleUnconditionalLayoutRefreshes([350, 900, 1800]);
-  });
-  if (screen.orientation) {
-    screen.orientation.addEventListener("change", () => scheduleUpdates([50, 100, 200, 350, 600, 900, 1300, 1800]));
-  }
-  document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) scheduleUpdates([50, 200, 500, 900]); // app resumed from background
-  });
-
-  // Navigating between pages in the PWA (e.g. Home -> Explore -> Home -> Explore) doesn't
-  // always do a genuine fresh page load - WebKit can restore a previous visit from the
-  // back-forward cache (bfcache) instead, in which case NONE of the script above re-runs at
-  // all (it only ever ran once, on that page's original load) and the WebView's safe-area/
-  // frame renegotiation on restore isn't guaranteed to match what our correction would have
-  // computed - this is suspected to be the root cause of the iOS PWA bottom-bar bug
-  // appearing intermittently on repeated in-app navigation but never on a fresh app launch.
-  // `pageshow`'s `persisted` flag is true specifically for a bfcache restore, so redo the
-  // whole correction sequence manually in that case.
-  window.addEventListener("pageshow", (event) => {
-    if (!event.persisted) return;
-    setActualViewportHeight();
-    scheduleUpdates([50, 100, 200, 350, 600, 900, 1300, 1800, 2400]);
-    scheduleUnconditionalLayoutRefreshes([350, 900, 1800, 2400]);
-  });
-}
-
-
-fixIOSViewportBug();
+// iOS's under-reported window.innerHeight in standalone/full-screen PWA mode was previously
+// worked around here with a whole JS-driven --actual-vh correction (fixIOSViewportBug, ported
+// from Graphiti - see git history / temp/graphiti/ios-pwa-bottom-bar-fix.md for the full
+// writeup if this ever needs resurrecting). Removed after extensive on-device debugging showed
+// it was actively causing bugs (bottom bar appearing on repeated in-app navigation, toolbar
+// buttons becoming unresponsive after rotation) that don't occur at all on index.html/
+// expansion.html - neither of which ever ran this workaround and instead just use plain CSS.
+// Replaced with the modern native `100dvh` unit in style.css, which is purpose-built for this
+// exact problem and needs no JS at all - matching the same "just use plain CSS" approach that
+// already worked correctly on the other two pages.
 
 const canvas = document.getElementById("triangleCanvas");
 const ctx = canvas.getContext("2d");
@@ -198,12 +76,9 @@ shadingNonzeroColorInput.addEventListener("input", () => {
   dirty = true;
 });
 
-// Unconditionally reset on every "resize" event (including the synthetic ones
-// fixIOSViewportBug() redispatches several times in the first ~2.5s after an iOS PWA launch,
-// to force a re-measure against the corrected --actual-vh) - this can wipe out panning done in
-// that window, but that's an accepted tradeoff: fixing the iOS bottom-bar bug reliably matters
-// more than preserving a pan gesture nobody but a developer testing immediately after launch
-// would ever do.
+// Resets the canvas/viewport on every resize/orientation change - simpler now that the old
+// JS-driven iOS viewport-height workaround (which used to redispatch synthetic resize events)
+// has been removed in favour of plain CSS (100dvh) - see the comment near the top of this file.
 function resizeCanvas() {
   const dpr = window.devicePixelRatio || 1;
   const rect = canvas.getBoundingClientRect();
