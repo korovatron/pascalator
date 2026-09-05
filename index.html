@@ -3,13 +3,110 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Pascalator - Pascal's triangle teaching tools</title>
-<meta name="description" content="Pascalator: an interactive Pascal's triangle explorer and binomial expansion practice tool for the classroom." />
+<title>Pascalator - Interactive Pascal's Triangle & Binomial Expansion Tool</title>
+<meta name="description" content="Pascalator: an interactive Pascal's triangle explorer and binomial expansion practice tool for the classroom - ideal for teaching binomial expansion for AQA Level 2 Further Maths and GCSE/A Level Maths." />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+<meta name="author" content="Neil Kendall" />
+<link rel="canonical" href="https://www.korovatron.co.uk/pascalator/" />
 <link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png" />
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
 <link rel="manifest" href="manifest.json" />
 <meta name="theme-color" content="#05070f" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Pascalator" />
+
+<!-- Open Graph / Facebook / WhatsApp -->
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://www.korovatron.co.uk/pascalator/" />
+<meta property="og:title" content="Pascalator - Interactive Pascal's Triangle & Binomial Expansion Tool" />
+<meta property="og:site_name" content="Korovatron" />
+<meta property="og:description" content="Pascalator: an interactive Pascal's triangle explorer and binomial expansion practice tool for the classroom - ideal for teaching binomial expansion for AQA Level 2 Further Maths and GCSE/A Level Maths." />
+<meta property="og:image" content="https://www.korovatron.co.uk/pascalator/previewImages/sierpinskiPreview.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="704" />
+<meta property="og:image:alt" content="Pascal's triangle shaded modulo 2 in Pascalator, revealing the Sierpinski triangle fractal" />
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Pascalator - Interactive Pascal's Triangle & Binomial Expansion Tool" />
+<meta name="twitter:description" content="Pascalator: an interactive Pascal's triangle explorer and binomial expansion practice tool for the classroom - ideal for teaching binomial expansion for AQA Level 2 Further Maths and GCSE/A Level Maths." />
+<meta name="twitter:image" content="https://www.korovatron.co.uk/pascalator/previewImages/sierpinskiPreview.png" />
+
+<!-- JSON-LD Structured Data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://www.korovatron.co.uk/pascalator/#breadcrumb",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Korovatron",
+          "item": "https://www.korovatron.co.uk/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Pascalator",
+          "item": "https://www.korovatron.co.uk/pascalator/"
+        }
+      ]
+    },
+    {
+      "@type": "WebApplication",
+      "@id": "https://www.korovatron.co.uk/pascalator/#webapplication",
+      "name": "Pascalator",
+      "alternateName": ["Pascalator Pascal's Triangle Explorer", "Pascal's Triangle Calculator", "Binomial Expansion Calculator"],
+      "description": "Pascalator is a free interactive Pascal's triangle explorer and binomial expansion practice tool. Pan and zoom an infinite hexagonal Pascal's triangle, highlight rows, diagonals and hockey-stick identities, reveal fractals like the Sierpinski triangle, and practise binomial expansion with randomly generated, colour-coded, step-by-step worked solutions.",
+      "disambiguatingDescription": "Ideal for teaching binomial expansion of integer powers for AQA Level 2 Further Maths, GCSE, and A Level Maths, and for exploring number patterns (Pascal's triangle, Sierpinski's triangle, hockey-stick identity) in the classroom.",
+      "url": "https://www.korovatron.co.uk/pascalator/",
+      "applicationCategory": "EducationalApplication",
+      "applicationSubCategory": "Maths teaching tool",
+      "operatingSystem": "Web Browser",
+      "inLanguage": "en-GB",
+      "isAccessibleForFree": true,
+      "educationalUse": "Binomial expansion of integer powers, Pascal's triangle, binomial coefficients, combinatorics, and number pattern exploration for AQA Level 2 Further Maths, GCSE Maths, and A Level Maths",
+      "featureList": [
+        "Pan and zoom an infinite hexagonal Pascal's triangle",
+        "Highlight a cell, row, diagonal, or hockey-stick identity",
+        "Reveal fractals (e.g. Sierpinski's triangle) via modulo shading",
+        "Randomly generated binomial expansion questions",
+        "Colour-coded, step-by-step binomial expansion reveal",
+        "Works fully offline as an installable Progressive Web App"
+      ],
+      "author": {
+        "@type": "Person",
+        "name": "Neil Kendall",
+        "url": "https://www.korovatron.co.uk"
+      },
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "GBP"
+      },
+      "image": "https://www.korovatron.co.uk/pascalator/previewImages/sierpinskiPreview.png",
+      "browserRequirements": "Requires JavaScript. Works on desktop and mobile browsers.",
+      "hasPart": [
+        { "@id": "https://www.korovatron.co.uk/pascalator/explore.html#webapplication" },
+        { "@id": "https://www.korovatron.co.uk/pascalator/expansion.html#webapplication" }
+      ],
+      "breadcrumb": {
+        "@id": "https://www.korovatron.co.uk/pascalator/#breadcrumb"
+      },
+      "publisher": {
+        "@id": "https://www.korovatron.co.uk/#organization"
+      }
+    }
+  ]
+}
+</script>
+
 <link rel="stylesheet" href="src/portal.css" />
+<script defer src="src/register-sw.js"></script>
 </head>
 <body>
   <main class="landing">

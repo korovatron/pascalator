@@ -3,14 +3,114 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Explore - Pascalator</title>
+<title>Interactive Pascal's Triangle Explorer | Pascalator</title>
+<meta name="description" content="Explore an infinite, pannable, zoomable Pascal's triangle. Highlight rows, diagonals, and hockey-stick identities, and reveal fractals like the Sierpinski triangle - free classroom teaching tool." />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+<meta name="author" content="Neil Kendall" />
+<link rel="canonical" href="https://www.korovatron.co.uk/pascalator/explore.html" />
 <link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png" />
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
 <link rel="manifest" href="manifest.json" />
 <meta name="theme-color" content="#05070f" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Pascalator" />
+
+<!-- Open Graph / Facebook / WhatsApp -->
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://www.korovatron.co.uk/pascalator/explore.html" />
+<meta property="og:title" content="Interactive Pascal's Triangle Explorer | Pascalator" />
+<meta property="og:site_name" content="Korovatron" />
+<meta property="og:description" content="Explore an infinite, pannable, zoomable Pascal's triangle. Highlight rows, diagonals, and hockey-stick identities, and reveal fractals like the Sierpinski triangle - free classroom teaching tool." />
+<meta property="og:image" content="https://www.korovatron.co.uk/pascalator/previewImages/explorePreview.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="704" />
+<meta property="og:image:alt" content="Pascalator's Pascal's triangle explorer, highlighting a hockey-stick identity" />
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Interactive Pascal's Triangle Explorer | Pascalator" />
+<meta name="twitter:description" content="Explore an infinite, pannable, zoomable Pascal's triangle. Highlight rows, diagonals, and hockey-stick identities, and reveal fractals like the Sierpinski triangle - free classroom teaching tool." />
+<meta name="twitter:image" content="https://www.korovatron.co.uk/pascalator/previewImages/explorePreview.png" />
+
+<!-- JSON-LD Structured Data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://www.korovatron.co.uk/pascalator/explore.html#breadcrumb",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Korovatron",
+          "item": "https://www.korovatron.co.uk/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Pascalator",
+          "item": "https://www.korovatron.co.uk/pascalator/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Explore",
+          "item": "https://www.korovatron.co.uk/pascalator/explore.html"
+        }
+      ]
+    },
+    {
+      "@type": "WebApplication",
+      "@id": "https://www.korovatron.co.uk/pascalator/explore.html#webapplication",
+      "name": "Pascalator - Explore Pascal's Triangle",
+      "description": "Pan and zoom an infinite hexagonal Pascal's triangle. Highlight a single cell, a whole row, a diagonal, or a hockey-stick identity, and reveal number-pattern fractals like the Sierpinski triangle via modulo shading.",
+      "url": "https://www.korovatron.co.uk/pascalator/explore.html",
+      "applicationCategory": "EducationalApplication",
+      "applicationSubCategory": "Maths teaching tool",
+      "operatingSystem": "Web Browser",
+      "inLanguage": "en-GB",
+      "isAccessibleForFree": true,
+      "educationalUse": "Pascal's triangle, binomial coefficients, combinatorics, hockey-stick identity, and number pattern exploration (Sierpinski's triangle) for GCSE and A Level Maths",
+      "featureList": [
+        "Pan and zoom an infinite hexagonal Pascal's triangle",
+        "Highlight a cell, row, diagonal, or hockey-stick identity",
+        "Colour-coded pattern explanations with KaTeX-rendered formulae",
+        "Modulo shading reveals fractals such as the Sierpinski triangle",
+        "Works fully offline as an installable Progressive Web App"
+      ],
+      "author": {
+        "@type": "Person",
+        "name": "Neil Kendall",
+        "url": "https://www.korovatron.co.uk"
+      },
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "GBP"
+      },
+      "image": "https://www.korovatron.co.uk/pascalator/previewImages/explorePreview.png",
+      "browserRequirements": "Requires JavaScript. Works on desktop and mobile browsers.",
+      "isPartOf": {
+        "@id": "https://www.korovatron.co.uk/pascalator/#webapplication"
+      },
+      "breadcrumb": {
+        "@id": "https://www.korovatron.co.uk/pascalator/explore.html#breadcrumb"
+      },
+      "publisher": {
+        "@id": "https://www.korovatron.co.uk/#organization"
+      }
+    }
+  ]
+}
+</script>
+
 <link rel="stylesheet" href="src/style.css" />
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="src/register-sw.js"></script>
 </head>
 <body>
   <div id="app">

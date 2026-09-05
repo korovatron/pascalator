@@ -3,15 +3,115 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Binomial Expansion Practice - Pascalator</title>
+<title>Binomial Expansion Practice Generator | Pascalator</title>
+<meta name="description" content="Generate random binomial expansion questions and reveal a colour-coded, step-by-step worked solution - free classroom tool for teaching binomial expansion for AQA Level 2 Further Maths and GCSE/A Level Maths." />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+<meta name="author" content="Neil Kendall" />
+<link rel="canonical" href="https://www.korovatron.co.uk/pascalator/expansion.html" />
 <link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png" />
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
 <link rel="manifest" href="manifest.json" />
 <meta name="theme-color" content="#05070f" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Pascalator" />
+
+<!-- Open Graph / Facebook / WhatsApp -->
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://www.korovatron.co.uk/pascalator/expansion.html" />
+<meta property="og:title" content="Binomial Expansion Practice Generator | Pascalator" />
+<meta property="og:site_name" content="Korovatron" />
+<meta property="og:description" content="Generate random binomial expansion questions and reveal a colour-coded, step-by-step worked solution - free classroom tool for teaching binomial expansion for AQA Level 2 Further Maths and GCSE/A Level Maths." />
+<meta property="og:image" content="https://www.korovatron.co.uk/pascalator/previewImages/binomialExpansionPreview.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="702" />
+<meta property="og:image:alt" content="Pascalator's binomial expansion practice tool showing a colour-coded, step-by-step worked solution" />
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Binomial Expansion Practice Generator | Pascalator" />
+<meta name="twitter:description" content="Generate random binomial expansion questions and reveal a colour-coded, step-by-step worked solution - free classroom tool for teaching binomial expansion for AQA Level 2 Further Maths and GCSE/A Level Maths." />
+<meta name="twitter:image" content="https://www.korovatron.co.uk/pascalator/previewImages/binomialExpansionPreview.png" />
+
+<!-- JSON-LD Structured Data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://www.korovatron.co.uk/pascalator/expansion.html#breadcrumb",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Korovatron",
+          "item": "https://www.korovatron.co.uk/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Pascalator",
+          "item": "https://www.korovatron.co.uk/pascalator/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Binomial Expansion Practice",
+          "item": "https://www.korovatron.co.uk/pascalator/expansion.html"
+        }
+      ]
+    },
+    {
+      "@type": "WebApplication",
+      "@id": "https://www.korovatron.co.uk/pascalator/expansion.html#webapplication",
+      "name": "Pascalator - Binomial Expansion Practice",
+      "description": "Generates a random binomial expansion question, e.g. (2x - 3y)^4, and reveals a colour-coded, step-by-step worked solution linking each term back to the relevant row of Pascal's triangle.",
+      "url": "https://www.korovatron.co.uk/pascalator/expansion.html",
+      "applicationCategory": "EducationalApplication",
+      "applicationSubCategory": "Maths teaching tool",
+      "operatingSystem": "Web Browser",
+      "inLanguage": "en-GB",
+      "isAccessibleForFree": true,
+      "educationalUse": "Binomial expansion of integer powers, the binomial theorem, and Pascal's triangle for AQA Level 2 Further Maths, GCSE Maths, and A Level Maths",
+      "featureList": [
+        "Randomly generated binomial expansion questions",
+        "Step-by-step reveal, one stage at a time",
+        "Colour-coded terms so students can trace each part through the working",
+        "Shows the relevant row of Pascal's triangle for each question",
+        "Works fully offline as an installable Progressive Web App"
+      ],
+      "author": {
+        "@type": "Person",
+        "name": "Neil Kendall",
+        "url": "https://www.korovatron.co.uk"
+      },
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "GBP"
+      },
+      "image": "https://www.korovatron.co.uk/pascalator/previewImages/binomialExpansionPreview.png",
+      "browserRequirements": "Requires JavaScript. Works on desktop and mobile browsers.",
+      "isPartOf": {
+        "@id": "https://www.korovatron.co.uk/pascalator/#webapplication"
+      },
+      "breadcrumb": {
+        "@id": "https://www.korovatron.co.uk/pascalator/expansion.html#breadcrumb"
+      },
+      "publisher": {
+        "@id": "https://www.korovatron.co.uk/#organization"
+      }
+    }
+  ]
+}
+</script>
+
 <link rel="stylesheet" href="src/portal.css" />
 <link rel="stylesheet" href="src/expansion.css" />
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="src/register-sw.js"></script>
 </head>
 <body>
   <header class="portal-header">

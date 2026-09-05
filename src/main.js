@@ -4,6 +4,60 @@ import { InfoCard } from "./infocard.js";
 import { pixelToHex } from "./hexgeom.js";
 import { shadingPatternName } from "./triangle.js";
 
+// iOS can misreport window.innerHeight in standalone/full-screen PWA mode (especially right
+// after launch, or rotating back to portrait), leaving a gap of raw page background at the
+// bottom of the screen - correcting a --actual-vh custom property a few times after
+// launch/rotation/resume (used by #app in style.css) avoids it. Ported from Graphiti (same
+// author) - see temp/graphiti/ios-pwa-bottom-bar-fix.md for the full writeup. Called first,
+// before anything else, since the very first paint needs the corrected height too.
+function fixIOSViewportBug() {
+  const isPWA =
+    window.matchMedia("(display-mode: standalone)").matches ||
+    window.matchMedia("(display-mode: fullscreen)").matches ||
+    window.navigator.standalone === true;
+  const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  let lastKnownHeight = 0;
+
+  const setActualViewportHeight = () => {
+    let viewportHeight = window.innerHeight;
+
+    // iOS PWA/standalone mode can under-report the height by ~59px (iPhone) / ~32px (iPad)
+    // in portrait - compensate up to the real screen height when the shortfall looks like
+    // this specific bug (small enough that it's not just a genuinely short window).
+    if (isIOS && isPWA && window.innerHeight > window.innerWidth) {
+      const screenPortraitHeight = Math.max(window.screen.height, window.screen.width);
+      const difference = screenPortraitHeight - viewportHeight;
+      if (difference > 15 && difference <= 180) viewportHeight = screenPortraitHeight;
+    }
+
+    document.documentElement.style.setProperty("--actual-vh", `${viewportHeight}px`);
+
+    // Only re-trigger canvas/viewport layout if the height actually changed meaningfully -
+    // avoids redundant resets from the staggered re-checks below settling on the same value.
+    if (lastKnownHeight > 0 && Math.abs(viewportHeight - lastKnownHeight) > 30) {
+      window.dispatchEvent(new Event("resize"));
+    }
+    lastKnownHeight = viewportHeight;
+  };
+
+  const scheduleUpdates = (delays) => {
+    for (const delay of delays) setTimeout(setActualViewportHeight, delay);
+  };
+
+  // iOS doesn't always have the correct value ready right at launch, so re-check a few
+  // times over the next ~2s rather than relying on a single measurement.
+  setActualViewportHeight();
+  scheduleUpdates([50, 100, 200, 350, 600, 900, 1300, 1800]);
+
+  window.addEventListener("resize", setActualViewportHeight);
+  window.addEventListener("orientationchange", () => scheduleUpdates([50, 100, 200, 350, 600, 900, 1300, 1800]));
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) scheduleUpdates([50, 200, 500, 900]); // app resumed from background
+  });
+}
+
+fixIOSViewportBug();
+
 const canvas = document.getElementById("triangleCanvas");
 const ctx = canvas.getContext("2d");
 const resetViewBtn = document.getElementById("resetViewBtn");

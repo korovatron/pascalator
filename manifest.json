@@ -3,6 +3,7 @@
   "short_name": "Pascalator",
   "description": "Pascal's triangle teaching tools: an interactive explorer and binomial expansion practice tool for the classroom.",
   "start_url": "index.html",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#05070f",
   "theme_color": "#05070f",
