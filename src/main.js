@@ -102,7 +102,14 @@ function fixIOSViewportBug() {
   scheduleUnconditionalLayoutRefreshes([350, 900, 1800, 2400]);
 
   window.addEventListener("resize", setActualViewportHeight);
-  window.addEventListener("orientationchange", () => scheduleUpdates([50, 100, 200, 350, 600, 900, 1300, 1800]));
+  // Also nudge on orientation change - not just re-checking the height: an orientation change
+  // is exactly the kind of transition where WebKit's hit-testing geometry (which routes taps
+  // to elements) can lag behind its own visual repaint, leaving on-screen buttons visually
+  // correct but unresponsive to taps (suspected same root cause as the bottom-bar bug).
+  window.addEventListener("orientationchange", () => {
+    scheduleUpdates([50, 100, 200, 350, 600, 900, 1300, 1800]);
+    scheduleUnconditionalLayoutRefreshes([350, 900, 1800]);
+  });
   if (screen.orientation) {
     screen.orientation.addEventListener("change", () => scheduleUpdates([50, 100, 200, 350, 600, 900, 1300, 1800]));
   }
