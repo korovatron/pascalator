@@ -56,6 +56,24 @@ function fixIOSViewportBug() {
     for (const delay of delays) setTimeout(setActualViewportHeight, delay);
   };
 
+  // The height-comparison logic above only helps when window.innerHeight is *misreporting* a
+  // height that's actually available - but on some in-app navigations the WKWebView's own
+  // native frame is genuinely the wrong (short) size at the OS level, and window.innerHeight
+  // faithfully (if unhelpfully) reports that same wrong value, giving nothing for the
+  // comparison above to detect. Confirmed manually: rotating to landscape and back to portrait
+  // always fixes it, because that forces iOS to redo a full native relayout of the WKWebView's
+  // frame for the new orientation. We can't trigger a real rotation from JS, but briefly
+  // touching the viewport meta tag's content is a long-standing trick for coaxing WebKit into
+  // recomputing its viewport/frame geometry outside of an actual zoom/rotation gesture - worth
+  // trying here since simply re-running the measurement/correction logic did not help.
+  const nudgeNativeLayout = () => {
+    const meta = document.querySelector('meta[name="viewport"]');
+    if (!meta) return;
+    const original = meta.getAttribute("content");
+    meta.setAttribute("content", `${original}, shrink-to-fit=no`);
+    requestAnimationFrame(() => meta.setAttribute("content", original));
+  };
+
   // Cold launch can settle on the *correct* --actual-vh from the very first synchronous
   // call (before isIOS+isPWA's own eventual settling), so the >30px-change guard above
   // never fires again and the canvas never gets told to re-measure against it - only a
@@ -64,7 +82,12 @@ function fixIOSViewportBug() {
   // event a few times regardless of whether --actual-vh itself changed.
   const scheduleUnconditionalLayoutRefreshes = (delays) => {
     if (!isIOS || !isPWA) return;
-    for (const delay of delays) setTimeout(() => window.dispatchEvent(new Event("resize")), delay);
+    for (const delay of delays) {
+      setTimeout(() => {
+        nudgeNativeLayout();
+        window.dispatchEvent(new Event("resize"));
+      }, delay);
+    }
   };
 
   // iOS doesn't always have the correct value ready right at launch, so re-check a few
