@@ -21,25 +21,18 @@ function fixIOSViewportBug() {
   const setActualViewportHeight = () => {
     let viewportHeight = window.innerHeight;
 
-    // iOS PWA/standalone mode can under-report the height by ~59px (iPhone) / ~32px (iPad)
-    // in portrait - compensate up to the real screen height when the shortfall looks like
-    // this specific bug (small enough that it's not just a genuinely short window). iOS
-    // calculates safe-area-inset-top asynchronously after launch, so --safe-area-top (see
-    // style.css, needs viewport-fit=cover to be non-zero at all) may still read 0 here on
-    // the earliest staggered check - remainingShortfall re-tests after accounting for it.
+    // In standalone/fullscreen PWA mode there's no address bar to ever legitimately shrink
+    // the viewport below the full screen height - unlike Safari-the-browser (what the old
+    // shortfall-detection heuristic below was designed for), so we don't need to *detect*
+    // whether a shortfall looks like the bug at all. Just unconditionally force the full
+    // screen height every time. This replaces a threshold/branch heuristic that could
+    // legitimately compute a *different* corrected value on different staggered checks a
+    // few hundred ms apart (since it depended on exactly what window.innerHeight/
+    // --safe-area-top happened to read at that specific tick) - which is suspected to be why
+    // the page could render correctly for a moment and then have the bug reappear shortly
+    // after: a later check was overwriting an already-correct value with a slightly wrong one.
     if (isIOS && isPWA && window.innerHeight > window.innerWidth) {
-      const screenPortraitHeight = Math.max(window.screen.height, window.screen.width);
-      const difference = screenPortraitHeight - viewportHeight;
-
-      if (difference > 15 && difference <= 180) {
-        const safeTopPx = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--safe-area-top")) || 0;
-        const heightWithSafeTop = viewportHeight + safeTopPx;
-        const remainingShortfall = screenPortraitHeight - heightWithSafeTop;
-
-        if (remainingShortfall > 8) viewportHeight = screenPortraitHeight;
-        else if (safeTopPx > 0) viewportHeight = heightWithSafeTop;
-        else viewportHeight = screenPortraitHeight;
-      }
+      viewportHeight = Math.max(window.screen.height, window.screen.width);
     }
 
     document.documentElement.style.setProperty("--actual-vh", `${viewportHeight}px`);
