@@ -234,7 +234,7 @@ button:hover {
 }
 
 #infoCard {
-  position: absolute;
+  position: fixed; /* anchored to the real viewport, not #app's box (deliberately sized with 100lvh) - keeps this clear of Safari's currently-visible address bar */
   bottom: calc(16px + var(--safe-area-bottom, 0px));
   right: calc(16px + var(--safe-area-right, 0px));
   width: 420px;
@@ -405,7 +405,7 @@ button:hover {
 }
 
 #helpModal {
-  position: absolute;
+  position: fixed; /* anchored to the real viewport, not #app's box (deliberately sized with 100lvh) - keeps this clear of Safari's currently-visible address bar */
   inset: 0;
   display: flex;
   align-items: center;
