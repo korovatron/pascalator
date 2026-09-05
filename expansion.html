@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Binomial Expansion Practice - Pascalator</title>
 <link rel="stylesheet" href="src/portal.css" />
+<link rel="stylesheet" href="src/expansion.css" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 </head>
@@ -14,9 +15,17 @@
     <h1>Binomial Expansion Practice</h1>
   </header>
 
-  <main class="placeholder-page">
-    <h2>Coming soon</h2>
-    <p>This tool will generate a random binomial expansion question and let you reveal the step-by-step solution. Check back once it's built.</p>
+  <main class="expansion-main">
+    <div class="expansion-controls">
+      <button id="newQuestionBtn">New question</button>
+      <button id="revealBtn">Reveal next step</button>
+    </div>
+
+    <div class="expansion-question" id="expansionQuestion"></div>
+
+    <div class="expansion-steps" id="expansionSteps"></div>
   </main>
+
+  <script type="module" src="src/expansion.js"></script>
 </body>
 </html>
