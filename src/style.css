@@ -59,6 +59,20 @@ html, body {
   letter-spacing: 0.5px;
 }
 
+.home-link {
+  font-size: 13px;
+  color: #a9adc1;
+  text-decoration: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  border: 1px solid #3a3d55;
+}
+
+.home-link:hover {
+  background: #2a2f47;
+  color: #e8e8f0;
+}
+
 .shading-card {
   margin-left: auto;
   display: flex;

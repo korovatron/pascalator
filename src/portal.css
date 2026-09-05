@@ -1,0 +1,172 @@
+/* Shared styling for the landing page (index.html) and any non-canvas tool pages
+   (e.g. expansion.html) - deliberately separate from style.css, which is specific
+   to the triangle explorer (explore.html) and its fixed-viewport canvas layout. */
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  min-height: 100%;
+  background: #000000;
+  color: #e8e8f0;
+  font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+a {
+  color: inherit;
+}
+
+.portal-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+}
+
+.portal-header h1 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+  color: #f0c93a;
+  letter-spacing: 0.5px;
+}
+
+.home-link {
+  font-size: 13px;
+  color: #a9adc1;
+  text-decoration: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  border: 1px solid #3a3d55;
+}
+
+.home-link:hover {
+  background: #2a2f47;
+  color: #e8e8f0;
+}
+
+.landing {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+  padding: 24px;
+  text-align: center;
+}
+
+.landing h1 {
+  font-size: clamp(32px, 6vw, 56px);
+  margin: 0;
+  color: #f0c93a;
+  letter-spacing: 0.5px;
+}
+
+.landing .subtitle {
+  margin: -28px 0 0;
+  font-size: clamp(14px, 2vw, 18px);
+  color: #a9adc1;
+}
+
+.card-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 24px;
+  max-width: 900px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 320px;
+  text-decoration: none;
+  background: rgba(18, 20, 32, 0.96);
+  border: 1px solid #22e8f0;
+  border-radius: 12px;
+  padding: 28px 26px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), 0 0 8px rgba(34, 232, 240, 0.5);
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.card:hover,
+.card:focus-visible {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), 0 0 18px rgba(34, 232, 240, 0.85);
+  transform: translateY(-2px);
+}
+
+.card.disabled {
+  border-color: #3a3d55;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.card.disabled:hover {
+  transform: none;
+}
+
+.card h2 {
+  margin: 0;
+  font-size: 20px;
+  color: #ffffff;
+}
+
+.card p {
+  margin: 0;
+  font-size: 14px;
+  color: #c6c9db;
+  line-height: 1.5;
+}
+
+.card .card-tag {
+  align-self: flex-start;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #1a1608;
+  background: #f0c93a;
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+
+.card.disabled .card-tag {
+  color: #a9adc1;
+  background: #2a2f47;
+}
+
+.placeholder-page {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+  text-align: center;
+}
+
+.placeholder-page h2 {
+  margin: 0;
+  font-size: clamp(22px, 4vw, 32px);
+  color: #f0c93a;
+}
+
+.placeholder-page p {
+  margin: 0;
+  max-width: 480px;
+  color: #a9adc1;
+  font-size: 15px;
+  line-height: 1.6;
+}
