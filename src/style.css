@@ -17,6 +17,7 @@ html, body {
   position: relative;
   width: 100vw;
   height: 100vh;
+  height: 100dvh; /* tracks the actual visible viewport on mobile browsers with a collapsing address bar */
 }
 
 #triangleCanvas {
@@ -98,6 +99,9 @@ button:hover {
   bottom: 16px;
   right: 16px;
   width: 420px;
+  max-height: calc(100vh - 32px);
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
   background: rgba(18, 20, 32, 0.96);
   border: 1px solid #22e8f0;
   border-radius: 10px;
@@ -115,6 +119,15 @@ button:hover {
     width: min(340px, calc(100vw - 24px));
     font-size: 16px;
     padding: 14px 16px;
+  }
+}
+
+/* Landscape phones etc: short viewport regardless of width - shrink further so the card never
+   gets clipped by the bottom of the screen (independent of the width-based breakpoint above). */
+@media (max-height: 480px) {
+  #infoCard {
+    font-size: 14px;
+    padding: 10px 14px;
   }
 }
 
