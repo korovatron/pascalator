@@ -111,11 +111,16 @@ canvas.addEventListener("pointerup", (e) => {
   if (wasDrag) return; // was a drag/pan
 
   const hex = screenToHex(up.x, up.y);
-  if (hex) {
+  // Any tap while something is already highlighted (row/diagonal/cell/hockey stick) just
+  // clears it - a new cell highlight is only set from a tap when nothing is highlighted yet,
+  // so switching to a different cell always takes a clear tap followed by a selecting tap.
+  if (highlightSelection) {
+    highlightSelection = null;
+    infoCard.hide();
+  } else if (hex) {
     highlightSelection = { type: "cell", n: hex.n, k: hex.k };
     infoCard.show(hex.n, hex.k, highlightSelection);
   } else {
-    highlightSelection = null;
     infoCard.hide();
   }
   dirty = true;

@@ -226,17 +226,14 @@ export class Renderer {
     return [...this._parentCells(selection), ...this._hockeyStickCells(viewport, cssHeight, selection)];
   }
 
-  /** Dims every cell except the highlighted selection (and its secondary cells, if any), via a single overlay fill with hex-shaped holes. */
+  /** Dims every cell except the highlighted selection (e.g. the hockey-stick blade) - secondary cells (a plain cell's parents, or a hockey-stick's handle) stay dimmed, with only their outline drawn on top. */
   _renderDimOverlay(ctx, viewport, cssWidth, cssHeight, selection) {
     const { scale } = viewport;
     const radius = Math.max(scale * 0.98, 4);
 
     const path = new Path2D();
     path.rect(0, 0, cssWidth, cssHeight);
-    const cells = [
-      ...this._selectionCells(viewport, cssWidth, cssHeight, selection),
-      ...this._secondaryCells(viewport, cssWidth, cssHeight, selection),
-    ];
+    const cells = this._selectionCells(viewport, cssWidth, cssHeight, selection);
     for (const { n, k } of cells) {
       const world = hexWorldPos(n, k);
       const { x: cx, y: cy } = viewport.worldToScreen(world.x, world.y);

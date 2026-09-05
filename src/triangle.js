@@ -214,6 +214,24 @@ export function diagonalSequenceName(p) {
 }
 
 /**
+ * Builds a hockey-stick LaTeX sum "term0 + term1 + ... = target" for `count` terms, where
+ * `termAt(i)` lazily returns the [n, k] of the i-th term (0-based) - lazy so this stays cheap
+ * even for a stick with thousands of terms. Terms are shown in full for count <= 3 (nothing to
+ * hide); for longer sticks only the first two and the last are shown, joined by a \cdots.
+ */
+function hockeyStickSumLatex(count, termAt, targetN, targetK) {
+  const binom = (n, k) => `\\binom{${n}}{${k}}`;
+  let parts;
+  if (count <= 3) {
+    parts = [];
+    for (let i = 0; i < count; i++) parts.push(binom(...termAt(i)));
+  } else {
+    parts = [binom(...termAt(0)), binom(...termAt(1)), "\\cdots", binom(...termAt(count - 1))];
+  }
+  return `${parts.join(" + ")} = ${binom(targetN, targetK)}`;
+}
+
+/**
  * Describes a highlight selection ({type, n, k}) as { label, detail, detailIsMath } - label is a
  * plain-text lead-in line (or null), detail is the line shown below it (or null). detailIsMath
  * says whether detail is a KaTeX-renderable LaTeX string (true) or plain text (false, e.g. a
@@ -248,20 +266,14 @@ export function describeSelection(selection) {
   if (type === "hockeyStickRight") {
     const r = k - 1;
     if (r < 0) return null;
-    return {
-      label: null,
-      detail: `\\binom{${r}}{${r}} + \\binom{${r + 1}}{${r}} + \\cdots + \\binom{${n - 1}}{${r}} = \\binom{${n}}{${k}}`,
-      detailIsMath: true,
-    };
+    const count = n - r;
+    return { label: null, detail: hockeyStickSumLatex(count, (i) => [r + i, r], n, k), detailIsMath: true };
   }
   if (type === "hockeyStickLeft") {
     const p = n - k - 1;
     if (p < 0) return null;
-    return {
-      label: null,
-      detail: `\\binom{${p}}{0} + \\binom{${p + 1}}{1} + \\cdots + \\binom{${n - 1}}{${n - 1 - p}} = \\binom{${n}}{${k}}`,
-      detailIsMath: true,
-    };
+    const count = n - p;
+    return { label: null, detail: hockeyStickSumLatex(count, (i) => [p + i, i], n, k), detailIsMath: true };
   }
   return null;
 }
