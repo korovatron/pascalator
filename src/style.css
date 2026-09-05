@@ -454,3 +454,22 @@ button:hover {
   margin-top: 4px;
 }
 
+/* Temporary diagnostic overlay for tracking down the iOS PWA bottom-bar bug - shows live
+   viewport measurements so they can be read directly off the screen when the bug appears.
+   Remove once the bug is resolved. */
+#debugOverlay {
+  position: fixed;
+  top: calc(4px + var(--safe-area-top, 0px));
+  left: 4px;
+  z-index: 9999;
+  pointer-events: none;
+  background: rgba(0, 0, 0, 0.85);
+  color: #0f0;
+  font-family: monospace;
+  font-size: 22px;
+  line-height: 1.4;
+  padding: 8px 10px;
+  border-radius: 6px;
+  white-space: pre;
+}
+
