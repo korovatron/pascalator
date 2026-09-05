@@ -134,9 +134,14 @@ canvas.addEventListener("contextmenu", (e) => {
 function showContextMenu(screenX, screenY, hex) {
   contextMenu.dataset.n = hex.n;
   contextMenu.dataset.k = hex.k;
-  contextMenu.style.left = `${screenX}px`;
-  contextMenu.style.top = `${screenY}px`;
   contextMenu.classList.remove("hidden");
+
+  // Clamp so the menu never gets clipped off the bottom/right (or top/left) of the viewport.
+  const margin = 8;
+  const maxLeft = window.innerWidth - contextMenu.offsetWidth - margin;
+  const maxTop = window.innerHeight - contextMenu.offsetHeight - margin;
+  contextMenu.style.left = `${Math.max(margin, Math.min(screenX, maxLeft))}px`;
+  contextMenu.style.top = `${Math.max(margin, Math.min(screenY, maxTop))}px`;
 }
 
 function hideContextMenu() {

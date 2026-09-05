@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Pascalator - interactive Pascal's triangle explorer</title>
 <link rel="stylesheet" href="src/style.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 </head>
 <body>
   <div id="app">
@@ -19,9 +21,15 @@
       <div class="info-row"><span class="info-label">Row (n)</span><span id="infoN"></span></div>
       <div class="info-row"><span class="info-label">Position (k)</span><span id="infoK"></span></div>
       <div class="info-row"><span class="info-label">Digits</span><span id="infoDigits"></span></div>
-      <div class="info-row"><span class="info-label">Value</span></div>
-      <div id="infoValue" class="info-value"></div>
-      <div id="infoSequence" class="info-sequence hidden"></div>
+      <fieldset class="info-value-box">
+        <legend>Value</legend>
+        <div id="infoValue" class="info-value"></div>
+      </fieldset>
+      <fieldset id="infoSequence" class="info-sequence hidden">
+        <legend>Pattern</legend>
+        <div id="infoSequenceLabel" class="info-sequence-label"></div>
+        <div id="infoSequenceDetail" class="info-sequence-detail"></div>
+      </fieldset>
       <div id="infoNote" class="info-note"></div>
     </div>
 
@@ -30,6 +38,8 @@
       <button data-highlight="row">Highlight row</button>
       <button data-highlight="diagSwNe">Highlight SW&ndash;NE diagonal</button>
       <button data-highlight="diagNwSe">Highlight NW&ndash;SE diagonal</button>
+      <button data-highlight="hockeyStickRight">Highlight hockey stick (right)</button>
+      <button data-highlight="hockeyStickLeft">Highlight hockey stick (left)</button>
     </div>
   </div>
 

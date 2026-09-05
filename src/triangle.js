@@ -213,19 +213,55 @@ export function diagonalSequenceName(p) {
   return `${p}-simplex numbers`;
 }
 
-/** Describes a highlight selection ({type, n, k}) in human terms, naming the sequence where recognised. */
+/**
+ * Describes a highlight selection ({type, n, k}) as { label, detail, detailIsMath } - label is a
+ * plain-text lead-in line (or null), detail is the line shown below it (or null). detailIsMath
+ * says whether detail is a KaTeX-renderable LaTeX string (true) or plain text (false, e.g. a
+ * named-sequence description) - plain text is rendered as normal HTML so it can word-wrap,
+ * since KaTeX formulas never wrap and would otherwise need a scrollbar or get clipped.
+ */
 export function describeSelection(selection) {
   if (!selection) return null;
   const { type, n, k } = selection;
+  if (type === "cell") {
+    if (n < 1 || k < 1 || k > n - 1) return null; // apex/edge cells have no second parent - nothing interesting to show
+    return {
+      label: null,
+      detail: `\\binom{${n}}{${k}} = \\binom{${n - 1}}{${k - 1}} + \\binom{${n - 1}}{${k}}`,
+      detailIsMath: true,
+    };
+  }
   if (type === "row") {
-    return `Row ${n} of Pascal's triangle (sum = 2^${n})`;
+    return {
+      label: `Row ${n} of Pascal's triangle:`,
+      detail: `\\sum_{k=0}^{${n}}\\binom{${n}}{k} = 2^{${n}}`,
+      detailIsMath: true,
+    };
   }
   if (type === "diagSwNe") {
-    return `SW\u2013NE diagonal (k = ${k}): ${diagonalSequenceName(k)}`;
+    return { label: `SW\u2013NE diagonal (k=${k}):`, detail: diagonalSequenceName(k), detailIsMath: false };
   }
   if (type === "diagNwSe") {
     const j = n - k;
-    return `NW\u2013SE diagonal (n \u2212 k = ${j}): ${diagonalSequenceName(j)}`;
+    return { label: `NW\u2013SE diagonal (n-k=${j}):`, detail: diagonalSequenceName(j), detailIsMath: false };
+  }
+  if (type === "hockeyStickRight") {
+    const r = k - 1;
+    if (r < 0) return null;
+    return {
+      label: null,
+      detail: `\\binom{${r}}{${r}} + \\binom{${r + 1}}{${r}} + \\cdots + \\binom{${n - 1}}{${r}} = \\binom{${n}}{${k}}`,
+      detailIsMath: true,
+    };
+  }
+  if (type === "hockeyStickLeft") {
+    const p = n - k - 1;
+    if (p < 0) return null;
+    return {
+      label: null,
+      detail: `\\binom{${p}}{0} + \\binom{${p + 1}}{1} + \\cdots + \\binom{${n - 1}}{${n - 1 - p}} = \\binom{${n}}{${k}}`,
+      detailIsMath: true,
+    };
   }
   return null;
 }

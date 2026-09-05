@@ -95,16 +95,27 @@ button:hover {
 
 #infoCard {
   position: absolute;
-  top: 60px;
+  bottom: 16px;
   right: 16px;
-  width: 260px;
+  width: 420px;
   background: rgba(18, 20, 32, 0.96);
-  border: 1px solid #3a3d55;
-  border-radius: 8px;
-  padding: 12px 14px;
-  font-size: 13px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  border: 1px solid #22e8f0;
+  border-radius: 10px;
+  padding: 20px 24px;
+  font-size: 22px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), 0 0 8px rgba(34, 232, 240, 0.7), 0 0 18px rgba(34, 232, 240, 0.45);
   z-index: 20;
+}
+
+@media (max-width: 600px) {
+  #infoCard {
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(340px, calc(100vw - 24px));
+    font-size: 16px;
+    padding: 14px 16px;
+  }
 }
 
 #infoCard.hidden {
@@ -114,41 +125,76 @@ button:hover {
 .info-row {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 4px;
-  color: #c6c9db;
+  margin-bottom: 8px;
+  color: #ffffff;
 }
 
 .info-label {
-  color: #7c81a0;
+  color: #ffffff;
+}
+
+.info-value-box {
+  border: 1px solid #22e8f0;
+  border-radius: 4px;
+  padding: 0 12px 10px;
+  margin: 0 0 10px;
+  min-width: 0;
+}
+
+.info-value-box legend {
+  padding: 0 8px;
+  color: #ffffff;
 }
 
 .info-value {
   font-family: "Cascadia Code", Consolas, monospace;
-  font-size: 12px;
+  font-size: 0.82em;
+  color: #ffffff;
+  text-align: center;
   word-break: break-all;
-  background: #0b0d16;
-  border: 1px solid #2a2f47;
+  background: rgba(18, 20, 32, 0.96);
   border-radius: 4px;
-  padding: 6px 8px;
-  max-height: 140px;
+  padding: 8px 10px;
+  max-height: 220px;
   overflow-y: auto;
-  margin-bottom: 6px;
 }
 
 .info-note {
-  font-size: 11px;
-  color: #8a8ea8;
+  font-size: 0.68em;
+  color: #ffffff;
   font-style: italic;
 }
 
 .info-sequence {
-  font-size: 12px;
-  color: #f0c93a;
-  background: rgba(240, 201, 58, 0.1);
-  border: 1px solid rgba(240, 201, 58, 0.35);
+  font-size: 0.85em;
+  color: #ffffff;
+  background: rgba(18, 20, 32, 0.96);
+  border: 1px solid #22e8f0;
   border-radius: 4px;
-  padding: 6px 8px;
+  padding: 0 12px 10px;
+  margin-bottom: 10px;
+  max-width: 100%;
+  overflow-x: hidden;
+  min-width: 0;
+}
+
+.info-sequence legend {
+  padding: 0 8px;
+  color: #ffffff;
+}
+
+.info-sequence-label {
   margin-bottom: 6px;
+}
+
+.info-sequence-label.hidden {
+  display: none;
+}
+
+.info-sequence-detail {
+  max-width: 100%;
+  overflow-x: hidden;
+  overflow-wrap: break-word;
 }
 
 .info-sequence.hidden {

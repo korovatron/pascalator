@@ -108,7 +108,7 @@ export class Renderer {
       const cssHeight = canvas.height / dpr;
       ctx.save();
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      this._renderParentHighlight(ctx, viewport, highlightSelection);
+      this._renderSecondaryHighlight(ctx, viewport, cssWidth, cssHeight, highlightSelection);
       this._renderHighlight(ctx, viewport, cssWidth, cssHeight, highlightSelection);
       ctx.restore();
     }
@@ -139,12 +139,14 @@ export class Renderer {
    *  - "row": every visible cell in row n.
    *  - "diagSwNe": every visible cell with the same k (fixed column - runs NE to SW).
    *  - "diagNwSe": every visible cell with the same (n - k) (fixed "right index" - runs NW to SE).
+   *  - "hockeyStickRight"/"hockeyStickLeft": just the blade cell (the "stick" handle cells are
+   *    handled separately - see _hockeyStickCells).
    */
   _selectionCells(viewport, cssWidth, cssHeight, selection) {
     const { type, n, k } = selection;
     const cells = [];
 
-    if (type === "cell") {
+    if (type === "cell" || type === "hockeyStickRight" || type === "hockeyStickLeft") {
       cells.push({ n, k });
       return cells;
     }
@@ -188,14 +190,53 @@ export class Renderer {
     return parents;
   }
 
-  /** Dims every cell except the highlighted selection (and its parent cells, if any), via a single overlay fill with hex-shaped holes. */
+  /**
+   * The "handle" cells of a hockey-stick identity ending at the blade cell (n, k), clipped to
+   * the visible row range like a full diagonal selection would be:
+   *  - "hockeyStickRight": sum_{i=r}^{n-1} C(i, r) = C(n, k), where r = k - 1 - the diagSwNe
+   *    diagonal at column r. Ascending the stick from the blade runs up and to the right.
+   *  - "hockeyStickLeft": sum_{i=p}^{n-1} C(i, i-p) = C(n, k), where p = n - k - 1 - the mirror
+   *    diagNwSe diagonal. Ascending the stick from the blade runs up and to the left.
+   */
+  _hockeyStickCells(viewport, cssHeight, selection) {
+    if (!selection) return [];
+    const { type, n, k } = selection;
+    const { nMin, nMax } = this._visibleRowRange(viewport, cssHeight);
+    const cells = [];
+
+    if (type === "hockeyStickRight") {
+      const r = k - 1;
+      if (r < 0) return [];
+      for (let i = Math.max(r, nMin); i <= Math.min(n - 1, nMax); i++) cells.push({ n: i, k: r });
+      return cells;
+    }
+
+    if (type === "hockeyStickLeft") {
+      const p = n - k - 1;
+      if (p < 0) return [];
+      for (let i = Math.max(p, nMin); i <= Math.min(n - 1, nMax); i++) cells.push({ n: i, k: i - p });
+      return cells;
+    }
+
+    return cells;
+  }
+
+  /** Secondary highlight cells for a selection - the parent cells of a highlighted single cell, or the handle of a hockey-stick selection. */
+  _secondaryCells(viewport, cssWidth, cssHeight, selection) {
+    return [...this._parentCells(selection), ...this._hockeyStickCells(viewport, cssHeight, selection)];
+  }
+
+  /** Dims every cell except the highlighted selection (and its secondary cells, if any), via a single overlay fill with hex-shaped holes. */
   _renderDimOverlay(ctx, viewport, cssWidth, cssHeight, selection) {
     const { scale } = viewport;
     const radius = Math.max(scale * 0.98, 4);
 
     const path = new Path2D();
     path.rect(0, 0, cssWidth, cssHeight);
-    const cells = [...this._selectionCells(viewport, cssWidth, cssHeight, selection), ...this._parentCells(selection)];
+    const cells = [
+      ...this._selectionCells(viewport, cssWidth, cssHeight, selection),
+      ...this._secondaryCells(viewport, cssWidth, cssHeight, selection),
+    ];
     for (const { n, k } of cells) {
       const world = hexWorldPos(n, k);
       const { x: cx, y: cy } = viewport.worldToScreen(world.x, world.y);
@@ -211,32 +252,32 @@ export class Renderer {
     ctx.restore();
   }
 
-  /** Outlines the two parent cells (see _parentCells) with a single static neon stroke, coloured to contrast both cells' own fill hues - no colour-cycling, less glow than the main highlight, and the edge shared between the two parents is skipped (as with adjacent cells in a row/diagonal highlight). */
-  _renderParentHighlight(ctx, viewport, selection) {
-    const parents = this._parentCells(selection);
-    if (parents.length === 0) return;
+  /** Outlines the secondary cells (see _secondaryCells) with a single static neon stroke, coloured to contrast all of their fill hues - no colour-cycling, less glow than the main highlight, and edges shared between adjacent secondary cells are skipped (as with a highlighted row/diagonal). */
+  _renderSecondaryHighlight(ctx, viewport, cssWidth, cssHeight, selection) {
+    const cells = this._secondaryCells(viewport, cssWidth, cssHeight, selection);
+    if (cells.length === 0) return;
 
     const { scale } = viewport;
     const radius = Math.max(scale * 0.98, 4);
-    const parentSet = new Set(parents.map(({ n, k }) => `${n},${k}`));
+    const cellSet = new Set(cells.map(({ n, k }) => `${n},${k}`));
 
-    const hues = parents.map(({ n, k }) => {
+    const hues = cells.map(({ n, k }) => {
       const rowMaxLog = n > 0 ? log10Binomial(n, Math.floor(n / 2)) : 0;
       const t = rowMaxLog > 0 ? log10Binomial(n, k) / rowMaxLog : 1;
       return 270 * (1 - t);
     });
-    const contrastHue = (meanHueDegrees(hues) + 180) % 360; // complementary to the mean of both cells' hues
+    const contrastHue = (meanHueDegrees(hues) + 180) % 360; // complementary to the mean of every secondary cell's hue
     const { r, g, b } = hslToRgb(contrastHue, 1, 0.6);
     const glowColor = `rgb(${r}, ${g}, ${b})`;
 
     const path = new Path2D();
-    for (const { n, k } of parents) {
+    for (const { n, k } of cells) {
       const world = hexWorldPos(n, k);
       const { x: cx, y: cy } = viewport.worldToScreen(world.x, world.y);
       const corners = hexCorners(cx, cy, radius);
       for (let i = 0; i < 6; i++) {
         const [dn, dk] = EDGE_NEIGHBOR_OFFSET[i];
-        if (parentSet.has(`${n + dn},${k + dk}`)) continue; // shared between the two parent cells - not a boundary edge
+        if (cellSet.has(`${n + dn},${k + dk}`)) continue; // shared with another secondary cell - not a boundary edge
         const [x1, y1] = corners[i];
         const [x2, y2] = corners[(i + 1) % 6];
         path.moveTo(x1, y1);
