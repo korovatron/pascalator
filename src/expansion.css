@@ -30,6 +30,7 @@
   color: #ffffff;
   font-size: 15px;
   cursor: pointer;
+  touch-action: manipulation; /* stop iOS Safari's rapid-tap native zoom on this button */
 }
 
 .expansion-controls button:hover:not(:disabled) {
