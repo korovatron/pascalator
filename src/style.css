@@ -39,6 +39,9 @@ html, body {
   height: 100%;
   touch-action: none;
   cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none; /* suppress iOS's long-press magnifier/callout over the triangle */
 }
 
 #triangleCanvas:active {
@@ -63,6 +66,13 @@ html, body {
   pointer-events: auto;
 }
 
+#toolbar,
+#toolbar * {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none; /* suppress iOS's long-press text-selection magnifier on the home link/title/reset button */
+}
+
 #toolbar h1 {
   font-size: 16px;
   font-weight: 600;
@@ -73,16 +83,18 @@ html, body {
 
 .home-link {
   font-size: 13px;
-  color: #a9adc1;
+  line-height: 1.2;
+  color: #ffffff;
   text-decoration: none;
-  padding: 5px 10px;
-  border-radius: 4px;
-  border: 1px solid #3a3d55;
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: 1px solid #22e8f0;
+  background: #171a28;
 }
 
 .home-link:hover {
   background: #2a2f47;
-  color: #e8e8f0;
+  color: #ffffff;
 }
 
 .shading-card {
@@ -179,12 +191,23 @@ html, body {
 #shadingModulusWide,
 #shadingModulusNarrow,
 #colourModeNarrow {
-  padding: 4px 6px;
+  padding: 5px 28px 5px 12px;
   border-radius: 4px;
   border: 1px solid #3a3d55;
-  background: #171a28;
+  background-color: #171a28;
   color: #e8e8f0;
   font-size: 13px;
+  line-height: 1.2;
+  font-family: inherit;
+  /* iOS renders the native select arrow too dark against this dark background -
+     draw our own white chevron instead of relying on the platform's own icon. */
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='%23ffffff' d='M4 6l4 4 4-4z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 12px;
 }
 
 .shading-pattern-name {
@@ -198,11 +221,13 @@ html, body {
 
 button {
   padding: 5px 12px;
-  border-radius: 4px;
-  border: 1px solid #3a3d55;
-  background: #1e2233;
-  color: #e8e8f0;
+  border-radius: 6px;
+  border: 1px solid #22e8f0;
+  background: #171a28;
+  color: #ffffff;
   font-size: 13px;
+  line-height: 1.2;
+  font-family: inherit;
   cursor: pointer;
 }
 

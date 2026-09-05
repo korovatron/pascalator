@@ -39,7 +39,12 @@ export class Viewport {
     const rect = this.canvas.getBoundingClientRect();
     this.scale = 40;
     this.panX = rect.width / 2;
-    this.panY = 70;
+    // Push the apex below the toolbar (its height varies with layout/safe-area-inset) rather
+    // than a fixed offset - the apex hex's topmost point sits `scale` px above its centre.
+    const toolbar = document.getElementById("toolbar");
+    const toolbarBottom = toolbar ? toolbar.getBoundingClientRect().bottom - rect.top : 30;
+    const TOP_MARGIN = 24;
+    this.panY = Math.max(70, toolbarBottom + TOP_MARGIN + this.scale);
     this._notify();
   }
 
