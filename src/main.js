@@ -10,8 +10,8 @@ const contextMenu = document.getElementById("contextMenu");
 
 let dirty = true;
 
-// The highlighted selection persists across pan/zoom - it's only cleared when
-// the user clicks/taps anywhere on the canvas (see the pointerup handler below).
+// The highlighted selection persists across pan/zoom - it's replaced/cleared
+// whenever the user taps/clicks anywhere on the canvas (see the pointerup handler below).
 let highlightSelection = null;
 
 const viewport = new Viewport(canvas, {
@@ -41,32 +41,94 @@ function screenToHex(sx, sy) {
   return { n, k };
 }
 
-// The context menu (shown on click/tap) lets the user pick what to highlight
-// from the clicked cell: itself, its row, or one of its two diagonals.
+// A plain tap/left-click highlights the clicked cell directly. The context menu
+// (row/diagonal/cell options) instead opens on a right-click or a long press/tap.
+const LONG_PRESS_MS = 500;
+const DRAG_THRESHOLD = 5;
+
 let downPos = null;
+let downOnCell = false;
+let longPressTimer = null;
+let longPressFired = false;
+
+function clearLongPressTimer() {
+  if (longPressTimer !== null) {
+    clearTimeout(longPressTimer);
+    longPressTimer = null;
+  }
+}
+
+// Desktop-only affordance: pointer/click-finger cursor over a cell, hand cursor elsewhere.
+function updateCursor(pointerType, x, y) {
+  if (pointerType !== "mouse") return;
+  canvas.style.cursor = screenToHex(x, y) ? "pointer" : "grab";
+}
 
 canvas.addEventListener("pointerdown", (e) => {
   const rect = canvas.getBoundingClientRect();
   downPos = { x: e.clientX - rect.left, y: e.clientY - rect.top };
-  hideContextMenu(); // re-shown by pointerup below if this turns out to be a tap, not a drag
+  downOnCell = !!screenToHex(downPos.x, downPos.y);
+  longPressFired = false;
+  hideContextMenu(); // re-shown below if this turns out to be a right-click or long press
+
+  if (e.button === 2) return; // right-click opens the menu via the "contextmenu" event instead
+  clearLongPressTimer();
+  longPressTimer = setTimeout(() => {
+    longPressTimer = null;
+    longPressFired = true;
+    const hex = screenToHex(downPos.x, downPos.y);
+    if (hex) showContextMenu(downPos.x, downPos.y, hex);
+  }, LONG_PRESS_MS);
+});
+
+canvas.addEventListener("pointermove", (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+
+  if (!downPos) {
+    updateCursor(e.pointerType, x, y);
+    return;
+  }
+
+  const dragging = Math.hypot(x - downPos.x, y - downPos.y) > DRAG_THRESHOLD;
+  if (dragging) clearLongPressTimer();
+  if (e.pointerType === "mouse") canvas.style.cursor = dragging ? "grabbing" : downOnCell ? "pointer" : "grab";
 });
 
 canvas.addEventListener("pointerup", (e) => {
+  clearLongPressTimer();
+  if (longPressFired || e.button === 2) {
+    downPos = null;
+    return;
+  }
+
   const rect = canvas.getBoundingClientRect();
   const up = { x: e.clientX - rect.left, y: e.clientY - rect.top };
-  if (downPos && Math.hypot(up.x - downPos.x, up.y - downPos.y) > 5) return; // was a drag/pan
-
-  // Any click/tap on the canvas clears the current highlight, whether or not it lands on a cell.
-  highlightSelection = null;
-  infoCard.hide();
-  dirty = true;
+  const wasDrag = downPos && Math.hypot(up.x - downPos.x, up.y - downPos.y) > DRAG_THRESHOLD;
+  downPos = null;
+  updateCursor(e.pointerType, up.x, up.y);
+  if (wasDrag) return; // was a drag/pan
 
   const hex = screenToHex(up.x, up.y);
   if (hex) {
-    showContextMenu(up.x, up.y, hex);
+    highlightSelection = { type: "cell", n: hex.n, k: hex.k };
+    infoCard.show(hex.n, hex.k, highlightSelection);
   } else {
-    hideContextMenu();
+    highlightSelection = null;
+    infoCard.hide();
   }
+  dirty = true;
+});
+
+canvas.addEventListener("contextmenu", (e) => {
+  e.preventDefault();
+  clearLongPressTimer();
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  const hex = screenToHex(x, y);
+  if (hex) showContextMenu(x, y, hex);
 });
 
 function showContextMenu(screenX, screenY, hex) {
