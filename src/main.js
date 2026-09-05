@@ -60,16 +60,11 @@ function fixIOSViewportBug() {
   // call (before isIOS+isPWA's own eventual settling), so the >30px-change guard above
   // never fires again and the canvas never gets told to re-measure against it - only a
   // genuine native resize/orientationchange (e.g. rotating and back) was forcing that
-  // re-measure, which is exactly the symptom this forces a few times regardless of whether
-  // --actual-vh itself changed. Dispatches a real "resize" event (tagged via `detail.forced`)
-  // rather than calling resizeCanvas() directly, so setActualViewportHeight's own "resize"
-  // listener still re-runs at the same tick too, keeping --actual-vh and the canvas's
-  // re-measurement synchronized exactly as they were before this force flag existed -
-  // calling resizeCanvas() directly here skipped that re-synchronization and made the bug
-  // worse rather than fixing it.
+  // re-measure, which is exactly the symptom this unconditionally re-dispatches a resize
+  // event a few times regardless of whether --actual-vh itself changed.
   const scheduleUnconditionalLayoutRefreshes = (delays) => {
     if (!isIOS || !isPWA) return;
-    for (const delay of delays) setTimeout(() => window.dispatchEvent(new CustomEvent("resize", { detail: { forced: true } })), delay);
+    for (const delay of delays) setTimeout(() => window.dispatchEvent(new Event("resize")), delay);
   };
 
   // iOS doesn't always have the correct value ready right at launch, so re-check a few
@@ -151,31 +146,22 @@ shadingNonzeroColorInput.addEventListener("input", () => {
   dirty = true;
 });
 
-// Only reset the viewport when the canvas's actual size changed, not on every "resize" event -
-// fixIOSViewportBug() deliberately redispatches synthetic resize events several times in the
-// first ~2.5s after an iOS PWA launch to force a re-measure, even once the height has already
-// settled; without this guard those redundant events kept wiping out any panning done in that
-// window (and assigning canvas.width/height, even to the same value, always clears the canvas).
-// `force=true` (used by fixIOSViewportBug's scheduleUnconditionalLayoutRefreshes) bypasses this
-// guard entirely - those calls exist specifically to force a re-measure/repaint even when the
-// measured size looks unchanged (the iOS bottom-bar bug can leave the canvas visually wrong
-// despite an identical getBoundingClientRect() reading), so skipping them reintroduces that bug.
-let lastCanvasSize = { width: 0, height: 0 };
-
-function resizeCanvas(force = false) {
+// Unconditionally reset on every "resize" event (including the synthetic ones
+// fixIOSViewportBug() redispatches several times in the first ~2.5s after an iOS PWA launch,
+// to force a re-measure against the corrected --actual-vh) - this can wipe out panning done in
+// that window, but that's an accepted tradeoff: fixing the iOS bottom-bar bug reliably matters
+// more than preserving a pan gesture nobody but a developer testing immediately after launch
+// would ever do.
+function resizeCanvas() {
   const dpr = window.devicePixelRatio || 1;
   const rect = canvas.getBoundingClientRect();
-  const newWidth = Math.max(1, Math.round(rect.width * dpr));
-  const newHeight = Math.max(1, Math.round(rect.height * dpr));
-  if (!force && newWidth === lastCanvasSize.width && newHeight === lastCanvasSize.height) return;
-  canvas.width = newWidth;
-  canvas.height = newHeight;
-  lastCanvasSize = { width: newWidth, height: newHeight };
+  canvas.width = Math.max(1, Math.round(rect.width * dpr));
+  canvas.height = Math.max(1, Math.round(rect.height * dpr));
   viewport.reset(); // also marks dirty via its onChange callback - a resize/orientation change is disorienting enough that starting fresh is clearer than trying to preserve the old pan/zoom
 }
 
-window.addEventListener("resize", (e) => resizeCanvas(e?.detail?.forced === true));
-window.addEventListener("orientationchange", () => resizeCanvas());
+window.addEventListener("resize", resizeCanvas);
+window.addEventListener("orientationchange", resizeCanvas);
 resizeCanvas();
 
 function screenToHex(sx, sy) {
