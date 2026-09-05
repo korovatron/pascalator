@@ -20,6 +20,19 @@ const FONT_MEASURE_SIZE = 32; // reference size for measuring text width (monosp
 
 const HIGHLIGHT_CYCLE_MS = 6000; // time for the highlight glow to sweep through the full spectrum once
 
+/** Circular mean of a list of hue angles (0-360), via vector averaging - handles wraparound correctly. */
+function meanHueDegrees(hues) {
+  let x = 0, y = 0;
+  for (const h of hues) {
+    const rad = (h * Math.PI) / 180;
+    x += Math.cos(rad);
+    y += Math.sin(rad);
+  }
+  let deg = (Math.atan2(y, x) * 180) / Math.PI;
+  if (deg < 0) deg += 360;
+  return deg;
+}
+
 // hexCorners()'s corner i to i+1 edge borders the neighbour at this (dn, dk) offset
 // (derived from the pointy-top axial layout in hexgeom.js).
 const EDGE_NEIGHBOR_OFFSET = [
@@ -95,6 +108,7 @@ export class Renderer {
       const cssHeight = canvas.height / dpr;
       ctx.save();
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      this._renderParentHighlight(ctx, viewport, highlightSelection);
       this._renderHighlight(ctx, viewport, cssWidth, cssHeight, highlightSelection);
       ctx.restore();
     }
@@ -160,14 +174,29 @@ export class Renderer {
     return cells;
   }
 
-  /** Dims every cell except the highlighted selection, via a single overlay fill with hex-shaped holes. */
+  /**
+   * The two cells (n-1,k-1) and (n-1,k) that add together to give the highlighted cell's
+   * value - only meaningful for a single-cell selection, and only where they exist (row 0
+   * has none, edge cells have only one).
+   */
+  _parentCells(selection) {
+    if (!selection || selection.type !== "cell" || selection.n < 1) return [];
+    const { n, k } = selection;
+    const parents = [];
+    if (k >= 1) parents.push({ n: n - 1, k: k - 1 });
+    if (k <= n - 1) parents.push({ n: n - 1, k });
+    return parents;
+  }
+
+  /** Dims every cell except the highlighted selection (and its parent cells, if any), via a single overlay fill with hex-shaped holes. */
   _renderDimOverlay(ctx, viewport, cssWidth, cssHeight, selection) {
     const { scale } = viewport;
     const radius = Math.max(scale * 0.98, 4);
 
     const path = new Path2D();
     path.rect(0, 0, cssWidth, cssHeight);
-    for (const { n, k } of this._selectionCells(viewport, cssWidth, cssHeight, selection)) {
+    const cells = [...this._selectionCells(viewport, cssWidth, cssHeight, selection), ...this._parentCells(selection)];
+    for (const { n, k } of cells) {
       const world = hexWorldPos(n, k);
       const { x: cx, y: cy } = viewport.worldToScreen(world.x, world.y);
       const corners = hexCorners(cx, cy, radius);
@@ -179,6 +208,50 @@ export class Renderer {
     ctx.save();
     ctx.fillStyle = "rgba(0, 0, 0, 0.72)";
     ctx.fill(path, "evenodd");
+    ctx.restore();
+  }
+
+  /** Outlines the two parent cells (see _parentCells) with a single static neon stroke, coloured to contrast both cells' own fill hues - no colour-cycling, less glow than the main highlight, and the edge shared between the two parents is skipped (as with adjacent cells in a row/diagonal highlight). */
+  _renderParentHighlight(ctx, viewport, selection) {
+    const parents = this._parentCells(selection);
+    if (parents.length === 0) return;
+
+    const { scale } = viewport;
+    const radius = Math.max(scale * 0.98, 4);
+    const parentSet = new Set(parents.map(({ n, k }) => `${n},${k}`));
+
+    const hues = parents.map(({ n, k }) => {
+      const rowMaxLog = n > 0 ? log10Binomial(n, Math.floor(n / 2)) : 0;
+      const t = rowMaxLog > 0 ? log10Binomial(n, k) / rowMaxLog : 1;
+      return 270 * (1 - t);
+    });
+    const contrastHue = (meanHueDegrees(hues) + 180) % 360; // complementary to the mean of both cells' hues
+    const { r, g, b } = hslToRgb(contrastHue, 1, 0.6);
+    const glowColor = `rgb(${r}, ${g}, ${b})`;
+
+    const path = new Path2D();
+    for (const { n, k } of parents) {
+      const world = hexWorldPos(n, k);
+      const { x: cx, y: cy } = viewport.worldToScreen(world.x, world.y);
+      const corners = hexCorners(cx, cy, radius);
+      for (let i = 0; i < 6; i++) {
+        const [dn, dk] = EDGE_NEIGHBOR_OFFSET[i];
+        if (parentSet.has(`${n + dn},${k + dk}`)) continue; // shared between the two parent cells - not a boundary edge
+        const [x1, y1] = corners[i];
+        const [x2, y2] = corners[(i + 1) % 6];
+        path.moveTo(x1, y1);
+        path.lineTo(x2, y2);
+      }
+    }
+
+    ctx.save();
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.lineWidth = Math.max(2, Math.min(5, scale * 0.1));
+    ctx.strokeStyle = glowColor;
+    ctx.shadowColor = glowColor;
+    ctx.shadowBlur = Math.max(8, scale * 0.25);
+    ctx.stroke(path);
     ctx.restore();
   }
 
