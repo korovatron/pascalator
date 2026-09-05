@@ -126,6 +126,16 @@ a {
   color: #ffffff;
 }
 
+.narrow-break {
+  display: none;
+}
+
+@media (max-width: 600px) {
+  .narrow-break {
+    display: inline;
+  }
+}
+
 .card-grid {
   display: flex;
   flex-wrap: wrap;

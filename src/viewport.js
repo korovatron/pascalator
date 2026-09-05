@@ -72,6 +72,24 @@ export class Viewport {
     this.scale = newScale;
   }
 
+  /** Pan by a screen-space delta (e.g. from an arrow-key press). */
+  panBy(dx, dy) {
+    this.panX += dx;
+    this.panY += dy;
+    this._markInteracting();
+    this._scheduleSettle();
+    this._notify();
+  }
+
+  /** Zoom in/out centred on the canvas's own centre (e.g. from a +/- key press). */
+  zoomCentered(factor) {
+    const rect = this.canvas.getBoundingClientRect();
+    this.zoomAt(rect.width / 2, rect.height / 2, factor);
+    this._markInteracting();
+    this._scheduleSettle();
+    this._notify();
+  }
+
   _attachEvents() {
     const canvas = this.canvas;
 

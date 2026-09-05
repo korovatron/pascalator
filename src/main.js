@@ -310,6 +310,44 @@ document.addEventListener("pointerdown", (e) => {
 
 resetViewBtn.addEventListener("click", () => viewport.reset());
 
+// Keyboard controls: arrow keys pan, +/- zoom in/out (centred on the canvas). Ignored while
+// a form control has focus (so typing in a select/colour picker isn't hijacked) or while a
+// modifier key is held (so browser/OS shortcuts like Ctrl+= for page zoom still work).
+const KEY_PAN_STEP = 60; // screen px per press
+const KEY_ZOOM_FACTOR = 1.2;
+
+document.addEventListener("keydown", (e) => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const tag = document.activeElement?.tagName;
+  if (tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA") return;
+
+  switch (e.key) {
+    case "ArrowUp":
+      viewport.panBy(0, KEY_PAN_STEP);
+      break;
+    case "ArrowDown":
+      viewport.panBy(0, -KEY_PAN_STEP);
+      break;
+    case "ArrowLeft":
+      viewport.panBy(KEY_PAN_STEP, 0);
+      break;
+    case "ArrowRight":
+      viewport.panBy(-KEY_PAN_STEP, 0);
+      break;
+    case "+":
+    case "=":
+      viewport.zoomCentered(KEY_ZOOM_FACTOR);
+      break;
+    case "-":
+    case "_":
+      viewport.zoomCentered(1 / KEY_ZOOM_FACTOR);
+      break;
+    default:
+      return;
+  }
+  e.preventDefault();
+});
+
 // Explains tap/click vs long-press/right-click - shown automatically on first visit, and
 // reopenable any time via the "?" toolbar button. Not shown again after being dismissed once
 // (localStorage may be unavailable e.g. private browsing - fails open, showing every visit).
