@@ -54,7 +54,8 @@ html, body {
   left: 0;
   right: 0;
   display: flex;
-  align-items: flex-start; /* keep the title/reset button pinned to the top even when the shading card/narrow controls grow taller */
+  flex-wrap: wrap;
+  align-items: flex-start; /* keep the title/reset button pinned to the top even when the shading card grows taller/wraps */
   gap: 16px;
   padding: calc(10px + var(--safe-area-top, 0px)) calc(16px + var(--safe-area-right, 0px)) 10px calc(16px + var(--safe-area-left, 0px));
   background: linear-gradient(to bottom, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0));
@@ -121,28 +122,24 @@ html, body {
   accent-color: #22e8f0;
 }
 
-.shading-narrow {
-  display: none; /* shown instead of .shading-card only on narrow screens - see the @media rule below */
-  flex-direction: column;
-  align-items: stretch;
-  gap: 6px;
-  margin-left: auto;
+.label-short {
+  display: none;
 }
 
 @media (max-width: 600px) {
-  .shading-card {
+  /* Same shading-card controls as wide screens, just abbreviated text to save space. */
+  .home-arrow,
+  .label-full {
     display: none;
   }
 
-  .shading-narrow {
-    display: flex;
+  .label-short {
+    display: inline;
   }
 }
 
 .shading-card,
-.shading-card *,
-.shading-narrow,
-.shading-narrow * {
+.shading-card * {
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none; /* suppress iOS's long-press text-selection magnifier */
@@ -188,9 +185,7 @@ html, body {
   font-size: 13px;
 }
 
-#shadingModulusWide,
-#shadingModulusNarrow,
-#colourModeNarrow {
+#shadingModulusWide {
   padding: 5px 28px 5px 12px;
   border-radius: 4px;
   border: 1px solid #3a3d55;
@@ -358,6 +353,11 @@ button:hover {
   overflow-wrap: break-word;
 }
 
+.info-sequence-detail.named {
+  color: #f0c93a;
+  font-weight: 600;
+}
+
 .info-sequence.hidden {
   display: none;
 }
@@ -399,5 +399,55 @@ button:hover {
 
 #contextMenu button:hover {
   background: #2a2f47;
+}
+
+#helpModal {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.65);
+  z-index: 40;
+}
+
+#helpModal.hidden {
+  display: none;
+}
+
+#helpModalCard {
+  max-width: min(420px, calc(100vw - 48px));
+  max-height: calc(var(--actual-vh, 100vh) - 48px);
+  overflow-y: auto;
+  background: rgba(18, 20, 32, 0.98);
+  border: 1px solid #22e8f0;
+  border-radius: 10px;
+  padding: 20px 24px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 8px rgba(34, 232, 240, 0.7), 0 0 18px rgba(34, 232, 240, 0.45);
+  color: #e8e8f0;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+#helpModalCard,
+#helpModalCard * {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none; /* suppress iOS's long-press text-selection magnifier */
+  touch-action: pan-y; /* stop iOS intercepting pinch gestures here as native page zoom, but still allow the card's own vertical scroll */
+}
+
+#helpModalCard h2 {
+  margin: 0 0 12px;
+  font-size: 18px;
+  color: #f0c93a;
+}
+
+#helpModalCard p {
+  margin: 0 0 12px;
+}
+
+#helpModalCard button {
+  margin-top: 4px;
 }
 

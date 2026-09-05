@@ -90,18 +90,13 @@ const ctx = canvas.getContext("2d");
 const resetViewBtn = document.getElementById("resetViewBtn");
 const contextMenu = document.getElementById("contextMenu");
 
-// Two parallel UIs for the same colour-mode state - a bordered "card" with radio buttons on
-// wide screens, a single pair of stacked dropdowns (no card) on narrow screens (see the
-// @media rule in style.css that shows/hides each). Both are kept in sync with the shared
-// colourMode/shadingModulus state below, whichever one the user actually interacts with.
+// The shading card (bordered, with radio buttons) is now shown on all screen sizes - only its
+// text labels get abbreviated on narrow screens via CSS (see .label-full/.label-short in
+// style.css). Kept in sync with the shared colourMode/shadingModulus state below.
 const colourModeRadiosWide = document.querySelectorAll('input[name="colourModeWide"]');
 const shadingModulusSelectWide = document.getElementById("shadingModulusWide");
 const shadingModuloRowWide = document.getElementById("shadingModuloRowWide");
 const shadingPatternNameWideEl = document.getElementById("shadingPatternNameWide");
-const colourModeSelectNarrow = document.getElementById("colourModeNarrow");
-const shadingModulusSelectNarrow = document.getElementById("shadingModulusNarrow");
-const shadingModuloRowNarrow = document.getElementById("shadingModuloRowNarrow");
-const shadingPatternNameNarrowEl = document.getElementById("shadingPatternNameNarrow");
 
 // Colour swatches (native <input type="color"> pickers) - wide screens only, shown at the
 // bottom of the shading card: one swatch for "none" mode, two for "modulo" mode.
@@ -151,11 +146,22 @@ shadingNonzeroColorInput.addEventListener("input", () => {
   dirty = true;
 });
 
+// Only reset the viewport when the canvas's actual size changed, not on every "resize" event -
+// fixIOSViewportBug() deliberately redispatches synthetic resize events several times in the
+// first ~2.5s after an iOS PWA launch to force a re-measure, even once the height has already
+// settled; without this guard those redundant events kept wiping out any panning done in that
+// window (and assigning canvas.width/height, even to the same value, always clears the canvas).
+let lastCanvasSize = { width: 0, height: 0 };
+
 function resizeCanvas() {
   const dpr = window.devicePixelRatio || 1;
   const rect = canvas.getBoundingClientRect();
-  canvas.width = Math.max(1, Math.round(rect.width * dpr));
-  canvas.height = Math.max(1, Math.round(rect.height * dpr));
+  const newWidth = Math.max(1, Math.round(rect.width * dpr));
+  const newHeight = Math.max(1, Math.round(rect.height * dpr));
+  if (newWidth === lastCanvasSize.width && newHeight === lastCanvasSize.height) return;
+  canvas.width = newWidth;
+  canvas.height = newHeight;
+  lastCanvasSize = { width: newWidth, height: newHeight };
   viewport.reset(); // also marks dirty via its onChange callback - a resize/orientation change is disorienting enough that starting fresh is clearer than trying to preserve the old pan/zoom
 }
 
@@ -304,24 +310,61 @@ document.addEventListener("pointerdown", (e) => {
 
 resetViewBtn.addEventListener("click", () => viewport.reset());
 
-/** Pushes the current colourMode/shadingModulus state out to both the wide-card and narrow-dropdown UIs. */
+// Explains tap/click vs long-press/right-click - shown automatically on first visit, and
+// reopenable any time via the "?" toolbar button. Not shown again after being dismissed once
+// (localStorage may be unavailable e.g. private browsing - fails open, showing every visit).
+const helpModal = document.getElementById("helpModal");
+const helpBtn = document.getElementById("helpBtn");
+const helpModalClose = document.getElementById("helpModalClose");
+const HELP_SEEN_KEY = "pascalatorExploreHelpSeen";
+
+function showHelpModal() {
+  helpModal.classList.remove("hidden");
+}
+
+function hideHelpModal() {
+  helpModal.classList.add("hidden");
+  try {
+    localStorage.setItem(HELP_SEEN_KEY, "1");
+  } catch {
+    // localStorage unavailable - the modal will just show again next visit, which is fine.
+  }
+}
+
+helpBtn.addEventListener("click", showHelpModal);
+helpModalClose.addEventListener("click", hideHelpModal);
+helpModal.addEventListener("click", (e) => {
+  if (e.target === helpModal) hideHelpModal(); // clicking the backdrop, not the card itself
+});
+
+let helpAlreadySeen = false;
+try {
+  helpAlreadySeen = localStorage.getItem(HELP_SEEN_KEY) === "1";
+} catch {
+  helpAlreadySeen = false;
+}
+if (!helpAlreadySeen) showHelpModal();
+
+/** Pushes the current colourMode/shadingModulus state out to the shading card UI. */
 function syncShadingUI() {
   for (const radio of colourModeRadiosWide) radio.checked = radio.value === colourMode;
-  colourModeSelectNarrow.value = colourMode;
   shadingModulusSelectWide.value = String(shadingModulus);
-  shadingModulusSelectNarrow.value = String(shadingModulus);
 
   const isModulo = colourMode === "modulo";
   shadingModuloRowWide.classList.toggle("hidden", !isModulo);
-  shadingModuloRowNarrow.classList.toggle("hidden", !isModulo);
   shadingSwatchesNone.classList.toggle("hidden", colourMode !== "none");
   shadingSwatchesModulo.classList.toggle("hidden", !isModulo);
 
   const name = isModulo ? shadingPatternName(shadingModulus) : null;
-  shadingPatternNameWideEl.textContent = name || "";
+  // On narrow screens (see .label-full/.label-short in style.css) drop a trailing " triangle"
+  // to save space, e.g. "Sierpinski triangle" -> "Sierpinski".
+  if (name) {
+    const shortName = name.replace(/ triangle$/i, "");
+    shadingPatternNameWideEl.innerHTML = `<span class="label-full">${name}</span><span class="label-short">${shortName}</span>`;
+  } else {
+    shadingPatternNameWideEl.textContent = "";
+  }
   shadingPatternNameWideEl.classList.toggle("hidden", !name);
-  shadingPatternNameNarrowEl.textContent = name || "";
-  shadingPatternNameNarrowEl.classList.toggle("hidden", !name);
 }
 
 for (const radio of colourModeRadiosWide) {
@@ -333,20 +376,8 @@ for (const radio of colourModeRadiosWide) {
   });
 }
 
-colourModeSelectNarrow.addEventListener("change", () => {
-  colourMode = colourModeSelectNarrow.value;
-  syncShadingUI();
-  dirty = true;
-});
-
 shadingModulusSelectWide.addEventListener("change", () => {
   shadingModulus = Number(shadingModulusSelectWide.value);
-  syncShadingUI();
-  dirty = true;
-});
-
-shadingModulusSelectNarrow.addEventListener("change", () => {
-  shadingModulus = Number(shadingModulusSelectNarrow.value);
   syncShadingUI();
   dirty = true;
 });

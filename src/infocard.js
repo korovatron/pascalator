@@ -31,6 +31,10 @@ export class InfoCard {
     } else {
       this.sequenceDetailEl.textContent = description?.detail || "";
     }
+    // Named-sequence descriptions (e.g. "Triangular numbers") are plain text, not KaTeX - pick
+    // them out visually in yellow so they stand out as a named result, distinct from the plain
+    // white maths formulas (row/hockey-stick/cell identities) shown for other selection types.
+    this.sequenceDetailEl.classList.toggle("named", Boolean(description?.detail) && !description.detailIsMath);
     this.sequenceEl.classList.toggle("hidden", !description);
 
     if (n <= INFOCARD_EXACT_LIMIT) {
