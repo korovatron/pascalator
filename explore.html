@@ -123,27 +123,29 @@
 
       <fieldset id="shadingCard" class="shading-card">
         <legend>Shading</legend>
-        <div class="toolbar-group">
-          <label><input type="radio" name="colourModeWide" value="none" /> None</label>
-          <label><input type="radio" name="colourModeWide" value="technicolour" checked /> <span class="label-full">Technicolour</span><span class="label-short">Col</span></label>
-          <label><input type="radio" name="colourModeWide" value="modulo" /> <span class="label-full">Modulo</span><span class="label-short">Mod</span></label>
-        </div>
-        <div class="toolbar-group shading-modulo-row hidden" id="shadingModuloRowWide">
-          <select id="shadingModulusWide">
-            <option value="2">mod 2</option>
-            <option value="3">mod 3</option>
-            <option value="5">mod 5</option>
-            <option value="7">mod 7</option>
-            <option value="11">mod 11</option>
-          </select>
-          <span id="shadingPatternNameWide" class="shading-pattern-name hidden"></span>
-        </div>
-        <div class="toolbar-group shading-swatch-row hidden" id="shadingSwatchesNone">
-          <label>Cell colour <input type="color" id="noneColorInput" /></label>
-        </div>
-        <div class="toolbar-group shading-swatch-row hidden" id="shadingSwatchesModulo">
-          <label><span class="label-full">Background</span><span class="label-short">Bg</span> <input type="color" id="shadingZeroColorInput" /></label>
-          <label>Pattern <input type="color" id="shadingNonzeroColorInput" /></label>
+        <div class="shading-card-body">
+          <div class="toolbar-group">
+            <label><input type="radio" name="colourModeWide" value="none" /> None</label>
+            <label><input type="radio" name="colourModeWide" value="technicolour" checked /> <span class="label-full">Technicolour</span><span class="label-short">Col</span></label>
+            <label><input type="radio" name="colourModeWide" value="modulo" /> <span class="label-full">Modulo</span><span class="label-short">Mod</span></label>
+          </div>
+          <div class="toolbar-group shading-modulo-row hidden" id="shadingModuloRowWide">
+            <select id="shadingModulusWide">
+              <option value="2">mod 2</option>
+              <option value="3">mod 3</option>
+              <option value="5">mod 5</option>
+              <option value="7">mod 7</option>
+              <option value="11">mod 11</option>
+            </select>
+            <span id="shadingPatternNameWide" class="shading-pattern-name hidden"></span>
+          </div>
+          <div class="toolbar-group shading-swatch-row hidden" id="shadingSwatchesNone">
+            <label>Cell colour <input type="color" id="noneColorInput" /></label>
+          </div>
+          <div class="toolbar-group shading-swatch-row hidden" id="shadingSwatchesModulo">
+            <label><span class="label-full">Background</span><span class="label-short">Bg</span> <input type="color" id="shadingZeroColorInput" /></label>
+            <label>Pattern <input type="color" id="shadingNonzeroColorInput" /></label>
+          </div>
         </div>
       </fieldset>
     </header>
