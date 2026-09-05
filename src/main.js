@@ -56,10 +56,22 @@ function fixIOSViewportBug() {
     for (const delay of delays) setTimeout(setActualViewportHeight, delay);
   };
 
+  // Cold launch can settle on the *correct* --actual-vh from the very first synchronous
+  // call (before isIOS+isPWA's own eventual settling), so the >30px-change guard above
+  // never fires again and the canvas never gets told to re-measure against it - only a
+  // genuine native resize/orientationchange (e.g. rotating and back) was forcing that
+  // re-measure, which is exactly the symptom this unconditionally re-dispatches a resize
+  // event a few times regardless of whether --actual-vh itself changed.
+  const scheduleUnconditionalLayoutRefreshes = (delays) => {
+    if (!isIOS || !isPWA) return;
+    for (const delay of delays) setTimeout(() => window.dispatchEvent(new Event("resize")), delay);
+  };
+
   // iOS doesn't always have the correct value ready right at launch, so re-check a few
   // times over the next ~2.4s rather than relying on a single measurement.
   setActualViewportHeight();
   scheduleUpdates([50, 100, 200, 350, 600, 900, 1300, 1800, 2400]);
+  scheduleUnconditionalLayoutRefreshes([350, 900, 1800, 2400]);
 
   window.addEventListener("resize", setActualViewportHeight);
   window.addEventListener("orientationchange", () => scheduleUpdates([50, 100, 200, 350, 600, 900, 1300, 1800]));
