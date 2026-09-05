@@ -91,29 +91,6 @@ window.addEventListener("resize", resizeCanvas);
 window.addEventListener("orientationchange", resizeCanvas);
 resizeCanvas();
 
-// Temporary diagnostic overlay for tracking down the iOS PWA bottom-bar bug - see style.css's
-// #debugOverlay comment. Remove both once the bug is resolved.
-const debugOverlay = document.getElementById("debugOverlay");
-
-function updateDebugOverlay() {
-  const appRect = document.getElementById("app").getBoundingClientRect();
-  const canvasRect = canvas.getBoundingClientRect();
-  debugOverlay.textContent = [
-    `innerH/W: ${window.innerHeight} / ${window.innerWidth}`,
-    `visualViewport H: ${window.visualViewport ? Math.round(window.visualViewport.height) : "n/a"}`,
-    `screen H/W: ${window.screen.height} / ${window.screen.width}`,
-    `#app rect H: ${Math.round(appRect.height)} (top ${Math.round(appRect.top)}, bottom ${Math.round(appRect.bottom)})`,
-    `canvas rect H: ${Math.round(canvasRect.height)}`,
-    `devicePixelRatio: ${window.devicePixelRatio}`,
-    `orientation: ${screen.orientation ? screen.orientation.type : "n/a"}`,
-  ].join("\n");
-}
-
-updateDebugOverlay();
-setInterval(updateDebugOverlay, 300);
-window.addEventListener("resize", updateDebugOverlay);
-window.addEventListener("orientationchange", updateDebugOverlay);
-
 function screenToHex(sx, sy) {
   const world = viewport.screenToWorld(sx, sy);
   const { n, k } = pixelToHex(world.x, world.y);
