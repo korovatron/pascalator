@@ -81,7 +81,24 @@ function fixIOSViewportBug() {
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden) scheduleUpdates([50, 200, 500, 900]); // app resumed from background
   });
+
+  // Navigating between pages in the PWA (e.g. Home -> Explore -> Home -> Explore) doesn't
+  // always do a genuine fresh page load - WebKit can restore a previous visit from the
+  // back-forward cache (bfcache) instead, in which case NONE of the script above re-runs at
+  // all (it only ever ran once, on that page's original load) and the WebView's safe-area/
+  // frame renegotiation on restore isn't guaranteed to match what our correction would have
+  // computed - this is suspected to be the root cause of the iOS PWA bottom-bar bug
+  // appearing intermittently on repeated in-app navigation but never on a fresh app launch.
+  // `pageshow`'s `persisted` flag is true specifically for a bfcache restore, so redo the
+  // whole correction sequence manually in that case.
+  window.addEventListener("pageshow", (event) => {
+    if (!event.persisted) return;
+    setActualViewportHeight();
+    scheduleUpdates([50, 100, 200, 350, 600, 900, 1300, 1800, 2400]);
+    scheduleUnconditionalLayoutRefreshes([350, 900, 1800, 2400]);
+  });
 }
+
 
 fixIOSViewportBug();
 
