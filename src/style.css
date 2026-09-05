@@ -39,7 +39,7 @@ html, body {
   left: 0;
   right: 0;
   display: flex;
-  align-items: center;
+  align-items: flex-start; /* keep the title/reset button pinned to the top even when the shading card/narrow controls grow taller */
   gap: 16px;
   padding: 10px 16px;
   background: linear-gradient(to bottom, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0));
@@ -59,6 +59,57 @@ html, body {
   letter-spacing: 0.5px;
 }
 
+.shading-card {
+  margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: rgba(18, 20, 32, 0.96);
+  border: 1px solid #22e8f0;
+  border-radius: 10px;
+  padding: 6px 14px 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), 0 0 8px rgba(34, 232, 240, 0.7), 0 0 18px rgba(34, 232, 240, 0.45);
+  font-size: 13px;
+  color: #ffffff;
+}
+
+.shading-card legend {
+  padding: 0 8px;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.shading-card input[type="radio"] {
+  accent-color: #22e8f0;
+}
+
+.shading-narrow {
+  display: none; /* shown instead of .shading-card only on narrow screens - see the @media rule below */
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  margin-left: auto;
+}
+
+@media (max-width: 600px) {
+  .shading-card {
+    display: none;
+  }
+
+  .shading-narrow {
+    display: flex;
+  }
+}
+
+.shading-card,
+.shading-card *,
+.shading-narrow,
+.shading-narrow * {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none; /* suppress iOS's long-press text-selection magnifier */
+}
+
 .toolbar-group {
   display: flex;
   align-items: center;
@@ -70,6 +121,24 @@ html, body {
   color: #a9adc1;
 }
 
+.shading-modulo-row.hidden {
+  display: none;
+}
+
+.shading-swatch-row.hidden {
+  display: none;
+}
+
+.shading-swatch-row input[type="color"] {
+  width: 28px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid #3a3d55;
+  border-radius: 4px;
+  background: #171a28;
+  cursor: pointer;
+}
+
 #rowInput {
   width: 90px;
   padding: 4px 6px;
@@ -78,6 +147,26 @@ html, body {
   background: #171a28;
   color: #e8e8f0;
   font-size: 13px;
+}
+
+#shadingModulusWide,
+#shadingModulusNarrow,
+#colourModeNarrow {
+  padding: 4px 6px;
+  border-radius: 4px;
+  border: 1px solid #3a3d55;
+  background: #171a28;
+  color: #e8e8f0;
+  font-size: 13px;
+}
+
+.shading-pattern-name {
+  color: #f0c93a;
+  font-style: italic;
+}
+
+.shading-pattern-name.hidden {
+  display: none;
 }
 
 button {

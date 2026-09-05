@@ -1,5 +1,14 @@
 import { SQRT3, hexWorldPos, hexCorners, pixelToHex } from "./hexgeom.js";
-import { getExactDigits, hslToRgb, log10Binomial, magnitudeColor, magnitudeIsLight, scientificFromDigitString, scientificFromLog10 } from "./triangle.js";
+import {
+  getExactDigits,
+  hslToRgb,
+  log10Binomial,
+  lucasNonzeroModPrime,
+  magnitudeColor,
+  magnitudeIsLight,
+  scientificFromDigitString,
+  scientificFromLog10,
+} from "./triangle.js";
 
 // Level-of-detail thresholds, expressed as on-screen hex radius in pixels
 // (== viewport.scale).
@@ -19,6 +28,30 @@ const MIN_FONT_SIZE = 8;
 const FONT_MEASURE_SIZE = 32; // reference size for measuring text width (monospace scales linearly)
 
 const HIGHLIGHT_CYCLE_MS = 6000; // time for the highlight glow to sweep through the full spectrum once
+
+// Modulo shading: only two colours needed, regardless of modulus - one for cells where
+// C(n,k) mod p == 0, one for the rest (the "lit" cells that trace out the fractal). Both are
+// user-customisable (see the colour swatches in the wide shading card) - these are just the
+// defaults, stored as instance properties (this.shadingZeroColor/this.shadingNonzeroColor).
+const DEFAULT_SHADING_ZERO_COLOR = "#1e143c";
+const DEFAULT_SHADING_NONZERO_COLOR = "#f0c93a";
+
+// "None" colour mode: a single flat neutral fill for every cell (for classroom clarity - no
+// colour-coding at all, just the grid and the numbers), also user-customisable (this.noneFillColor).
+const DEFAULT_NONE_FILL_COLOR = "#2a2d41";
+
+/** Parses a "#rrggbb" hex colour string into an [r, g, b] array of 0-255 integers. */
+function parseHexColor(hex) {
+  const int = parseInt(hex.slice(1), 16);
+  return [(int >> 16) & 255, (int >> 8) & 255, int & 255];
+}
+
+/** Picks a light or dark text colour to contrast a given "#rrggbb" background colour, by perceived luminance. */
+function contrastTextColor(hex) {
+  const [r, g, b] = parseHexColor(hex);
+  const perceived = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return perceived > 0.55 ? "#0b0d16" : "#f0f0f5";
+}
 
 /** Circular mean of a list of hue angles (0-360), via vector averaging - handles wraparound correctly. */
 function meanHueDegrees(hues) {
@@ -57,10 +90,27 @@ export class Renderer {
     // render - see _renderLargeTier. Cell geometry/colour is always recomputed live, but the
     // (costlier) label fit is only recomputed on settle and reused meanwhile.
     this.labelCache = new Map();
+    // User-customisable colours for the "none" and "modulo" colour modes (see the swatches
+    // in the wide shading card) - "technicolour" always uses the computed magnitude gradient.
+    this.noneFillColor = DEFAULT_NONE_FILL_COLOR;
+    this.shadingZeroColor = DEFAULT_SHADING_ZERO_COLOR;
+    this.shadingNonzeroColor = DEFAULT_SHADING_NONZERO_COLOR;
+  }
+
+  setNoneFillColor(hex) {
+    this.noneFillColor = hex;
+  }
+
+  setShadingZeroColor(hex) {
+    this.shadingZeroColor = hex;
+  }
+
+  setShadingNonzeroColor(hex) {
+    this.shadingNonzeroColor = hex;
   }
 
   /** Renders the tiered hex/pixel content into the offscreen buffer. Called every frame while dirty (including throughout a pan/zoom gesture). */
-  renderStatic(viewport, highlightSelection) {
+  renderStatic(viewport, highlightSelection, colourMode = "technicolour", shadingModulus = null) {
     const { canvas, staticCanvas, staticCtx: ctx } = this;
     if (staticCanvas.width !== canvas.width || staticCanvas.height !== canvas.height) {
       staticCanvas.width = canvas.width;
@@ -77,11 +127,11 @@ export class Renderer {
 
     const { scale } = viewport;
     if (scale < MEDIUM_MIN_SCALE) {
-      this._renderPixelField(ctx, viewport, dpr);
+      this._renderPixelField(ctx, viewport, dpr, colourMode, shadingModulus);
     } else if (scale < LARGE_MIN_SCALE) {
-      this._renderMediumTier(ctx, viewport, cssWidth, cssHeight);
+      this._renderMediumTier(ctx, viewport, cssWidth, cssHeight, colourMode, shadingModulus);
     } else {
-      this._renderLargeTier(ctx, viewport, cssWidth, cssHeight);
+      this._renderLargeTier(ctx, viewport, cssWidth, cssHeight, colourMode, shadingModulus);
     }
 
     if (highlightSelection) {
@@ -344,7 +394,7 @@ export class Renderer {
     ctx.restore();
   }
 
-  _renderLargeTier(ctx, viewport, cssWidth, cssHeight) {
+  _renderLargeTier(ctx, viewport, cssWidth, cssHeight, colourMode, shadingModulus) {
     const { scale } = viewport;
     const { nMin, nMax } = this._visibleRowRange(viewport, cssHeight);
     const interacting = viewport.isInteracting;
@@ -367,6 +417,7 @@ export class Renderer {
       const rowMaxLog = n > 0 ? log10Binomial(n, Math.floor(n / 2)) : 0;
       for (let k = kMin; k <= kMax; k++) {
         const t = rowMaxLog > 0 ? log10Binomial(n, k) / rowMaxLog : 1;
+        const shadingNonzero = colourMode === "modulo" ? lucasNonzeroModPrime(n, k, shadingModulus) : null;
         const world = hexWorldPos(n, k);
         const { x: cx, y: cy } = viewport.worldToScreen(world.x, world.y);
         const corners = hexCorners(cx, cy, scale * 0.96);
@@ -375,7 +426,14 @@ export class Renderer {
         ctx.moveTo(corners[0][0], corners[0][1]);
         for (let i = 1; i < 6; i++) ctx.lineTo(corners[i][0], corners[i][1]);
         ctx.closePath();
-        ctx.fillStyle = magnitudeColor(t);
+        ctx.fillStyle =
+          colourMode === "modulo"
+            ? shadingNonzero
+              ? this.shadingNonzeroColor
+              : this.shadingZeroColor
+            : colourMode === "none"
+              ? this.noneFillColor
+              : magnitudeColor(t);
         ctx.fill();
         ctx.strokeStyle = "rgba(10, 10, 20, 0.5)";
         ctx.stroke();
@@ -395,7 +453,14 @@ export class Renderer {
         // rescale it so the label still tracks the hex's live on-screen size.
         const drawFontSize = interacting ? entry.fontSize * (scale / entry.scale) : entry.fontSize;
         ctx.font = `${drawFontSize}px ${LABEL_FONT_FAMILY}`;
-        ctx.fillStyle = magnitudeIsLight(t) ? "#0b0d16" : "#f0f0f5";
+        ctx.fillStyle =
+          colourMode === "modulo"
+            ? contrastTextColor(shadingNonzero ? this.shadingNonzeroColor : this.shadingZeroColor)
+            : colourMode === "none"
+              ? contrastTextColor(this.noneFillColor)
+              : magnitudeIsLight(t)
+                ? "#0b0d16"
+                : "#f0f0f5";
         ctx.fillText(entry.label, cx, cy);
         ctx.font = `${FONT_MEASURE_SIZE}px ${LABEL_FONT_FAMILY}`; // restore for the next cell's measureText
       }
@@ -449,19 +514,29 @@ export class Renderer {
     return bestFontSize >= MIN_FONT_SIZE ? { label: bestLabel, fontSize: bestFontSize } : null;
   }
 
-  _renderMediumTier(ctx, viewport, cssWidth, cssHeight) {
+  _renderMediumTier(ctx, viewport, cssWidth, cssHeight, colourMode, shadingModulus) {
     const { scale } = viewport;
     const { nMin, nMax } = this._visibleRowRange(viewport, cssHeight);
 
-    const buckets = new Array(COLOR_BUCKETS);
-    for (let i = 0; i < COLOR_BUCKETS; i++) buckets[i] = new Path2D();
+    // "none" needs only 1 bucket (flat fill), "modulo" needs 2 (zero/nonzero mod p),
+    // "technicolour" needs COLOR_BUCKETS for the magnitude gradient.
+    const bucketCount = colourMode === "modulo" ? 2 : colourMode === "none" ? 1 : COLOR_BUCKETS;
+    const buckets = new Array(bucketCount);
+    for (let i = 0; i < bucketCount; i++) buckets[i] = new Path2D();
 
     for (let n = nMin; n <= nMax; n++) {
       const { kMin, kMax } = this._visibleKRange(n, viewport, cssWidth);
       const rowMaxLog = n > 0 ? log10Binomial(n, Math.floor(n / 2)) : 0;
       for (let k = kMin; k <= kMax; k++) {
-        const t = rowMaxLog > 0 ? log10Binomial(n, k) / rowMaxLog : 1;
-        const bucket = Math.min(COLOR_BUCKETS - 1, Math.max(0, Math.floor(t * COLOR_BUCKETS)));
+        let bucket;
+        if (colourMode === "modulo") {
+          bucket = lucasNonzeroModPrime(n, k, shadingModulus) ? 1 : 0;
+        } else if (colourMode === "none") {
+          bucket = 0;
+        } else {
+          const t = rowMaxLog > 0 ? log10Binomial(n, k) / rowMaxLog : 1;
+          bucket = Math.min(COLOR_BUCKETS - 1, Math.max(0, Math.floor(t * COLOR_BUCKETS)));
+        }
 
         const world = hexWorldPos(n, k);
         const { x: cx, y: cy } = viewport.worldToScreen(world.x, world.y);
@@ -474,13 +549,23 @@ export class Renderer {
       }
     }
 
-    for (let i = 0; i < COLOR_BUCKETS; i++) {
-      ctx.fillStyle = magnitudeColor((i + 0.5) / COLOR_BUCKETS);
-      ctx.fill(buckets[i]);
+    if (colourMode === "modulo") {
+      ctx.fillStyle = this.shadingZeroColor;
+      ctx.fill(buckets[0]);
+      ctx.fillStyle = this.shadingNonzeroColor;
+      ctx.fill(buckets[1]);
+    } else if (colourMode === "none") {
+      ctx.fillStyle = this.noneFillColor;
+      ctx.fill(buckets[0]);
+    } else {
+      for (let i = 0; i < COLOR_BUCKETS; i++) {
+        ctx.fillStyle = magnitudeColor((i + 0.5) / COLOR_BUCKETS);
+        ctx.fill(buckets[i]);
+      }
     }
   }
 
-  _renderPixelField(ctx, viewport, dpr) {
+  _renderPixelField(ctx, viewport, dpr, colourMode, shadingModulus) {
     const { canvas } = this;
     // putImageData always writes raw device pixels regardless of the current
     // canvas transform, so this method works directly in device-pixel space
@@ -495,6 +580,11 @@ export class Renderer {
     const data = imgData.data;
     const rowBytes = deviceWidth * 4;
 
+    // Precomputed once, rather than parsing a hex colour string per pixel block.
+    const shadingZeroRgb = colourMode === "modulo" ? parseHexColor(this.shadingZeroColor) : null;
+    const shadingNonzeroRgb = colourMode === "modulo" ? parseHexColor(this.shadingNonzeroColor) : null;
+    const noneRgb = colourMode === "none" ? parseHexColor(this.noneFillColor) : null;
+
     for (let by = 0; by < h; by++) {
       const deviceY = (by + 0.5) * stride;
       const sy = deviceY / dpr;
@@ -506,13 +596,22 @@ export class Renderer {
 
         let r = 0, g = 0, b = 0; // background colour when outside the triangle
         if (n >= 0 && n <= ABSOLUTE_MAX_ROW && k >= 0 && k <= n) {
-          const rowMaxLog = n > 0 ? log10Binomial(n, Math.floor(n / 2)) : 0;
-          const t = rowMaxLog > 0 ? log10Binomial(n, k) / rowMaxLog : 1;
-          const color = magnitudeColor(t);
-          const m = color.match(/(\d+), (\d+), (\d+)/);
-          r = +m[1];
-          g = +m[2];
-          b = +m[3];
+          if (colourMode === "modulo") {
+            const [sr, sg, sb] = lucasNonzeroModPrime(n, k, shadingModulus) ? shadingNonzeroRgb : shadingZeroRgb;
+            r = sr;
+            g = sg;
+            b = sb;
+          } else if (colourMode === "none") {
+            [r, g, b] = noneRgb;
+          } else {
+            const rowMaxLog = n > 0 ? log10Binomial(n, Math.floor(n / 2)) : 0;
+            const t = rowMaxLog > 0 ? log10Binomial(n, k) / rowMaxLog : 1;
+            const color = magnitudeColor(t);
+            const m = color.match(/(\d+), (\d+), (\d+)/);
+            r = +m[1];
+            g = +m[2];
+            b = +m[3];
+          }
         }
 
         const yStart = by * stride;

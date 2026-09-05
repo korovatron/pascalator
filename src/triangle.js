@@ -155,6 +155,35 @@ export function colorForCell(n, k) {
 }
 
 // ---------------------------------------------------------------------------
+// Modulo shading (e.g. C(n, k) mod 2 reveals Sierpinski's triangle)
+// ---------------------------------------------------------------------------
+
+export const SHADING_MODULI = [2, 3, 5, 7, 11]; // prime only - Lucas' theorem needs a prime modulus
+const SHADING_PATTERN_NAMES = { 2: "Sierpinski triangle" };
+
+/** Human-friendly name for the fractal revealed by shading mod `modulus`, or null if unnamed. */
+export function shadingPatternName(modulus) {
+  return SHADING_PATTERN_NAMES[modulus] || null;
+}
+
+/**
+ * Whether C(n, k) is NOT divisible by the prime `p`, i.e. C(n, k) mod p != 0.
+ * Uses Lucas' theorem: comparing the base-p digits of n and k - true iff every
+ * digit of k is <= the corresponding digit of n. O(log_p n), so this is cheap
+ * enough to call per-cell at any zoom level, however large n is.
+ */
+export function lucasNonzeroModPrime(n, k, p) {
+  let nn = n;
+  let kk = k;
+  while (nn > 0 || kk > 0) {
+    if (kk % p > nn % p) return false;
+    nn = Math.floor(nn / p);
+    kk = Math.floor(kk / p);
+  }
+  return true;
+}
+
+// ---------------------------------------------------------------------------
 // Display formatting
 // ---------------------------------------------------------------------------
 
