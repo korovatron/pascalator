@@ -108,6 +108,7 @@ html, body {
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none; /* suppress iOS's long-press text-selection magnifier */
+  touch-action: none; /* stop iOS intercepting pinch gestures over this element as native page zoom */
 }
 
 .toolbar-group {
@@ -205,6 +206,7 @@ button:hover {
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none; /* suppress iOS's long-press text-selection magnifier */
+  touch-action: pan-y; /* stop iOS intercepting pinch gestures here as native page zoom, but still allow the card's own vertical scroll */
 }
 
 @media (max-width: 600px) {
@@ -328,6 +330,7 @@ button:hover {
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none; /* suppress iOS's long-press text-selection magnifier */
+  touch-action: none; /* stop iOS intercepting pinch gestures over this element as native page zoom */
 }
 
 #contextMenu.hidden {
