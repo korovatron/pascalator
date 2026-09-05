@@ -61,14 +61,15 @@ function fixIOSViewportBug() {
   // never fires again and the canvas never gets told to re-measure against it - only a
   // genuine native resize/orientationchange (e.g. rotating and back) was forcing that
   // re-measure, which is exactly the symptom this forces a few times regardless of whether
-  // --actual-vh itself changed. Calls resizeCanvas(true) directly (not a dispatched "resize"
-  // event) so it always fully re-measures/resets, bypassing the pan-preserving skip-if-
-  // unchanged guard in resizeCanvas - safe to reference before its declaration below since
-  // this callback only actually runs later, via setTimeout, once the whole module has
-  // finished its synchronous evaluation.
+  // --actual-vh itself changed. Dispatches a real "resize" event (tagged via `detail.forced`)
+  // rather than calling resizeCanvas() directly, so setActualViewportHeight's own "resize"
+  // listener still re-runs at the same tick too, keeping --actual-vh and the canvas's
+  // re-measurement synchronized exactly as they were before this force flag existed -
+  // calling resizeCanvas() directly here skipped that re-synchronization and made the bug
+  // worse rather than fixing it.
   const scheduleUnconditionalLayoutRefreshes = (delays) => {
     if (!isIOS || !isPWA) return;
-    for (const delay of delays) setTimeout(() => resizeCanvas(true), delay);
+    for (const delay of delays) setTimeout(() => window.dispatchEvent(new CustomEvent("resize", { detail: { forced: true } })), delay);
   };
 
   // iOS doesn't always have the correct value ready right at launch, so re-check a few
@@ -173,7 +174,7 @@ function resizeCanvas(force = false) {
   viewport.reset(); // also marks dirty via its onChange callback - a resize/orientation change is disorienting enough that starting fresh is clearer than trying to preserve the old pan/zoom
 }
 
-window.addEventListener("resize", () => resizeCanvas());
+window.addEventListener("resize", (e) => resizeCanvas(e?.detail?.forced === true));
 window.addEventListener("orientationchange", () => resizeCanvas());
 resizeCanvas();
 
