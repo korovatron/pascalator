@@ -108,6 +108,13 @@ let downOnCell = false;
 let longPressTimer = null;
 let longPressFired = false;
 
+// Tracks whether more than one pointer was down at once during the current gesture (a pinch),
+// so the pointerup that ends it isn't mistaken for a tap - a single finger's own movement can
+// be small even during a two-finger pinch, so distance-from-its-own-down-position alone isn't
+// enough to detect this.
+const activePointerIds = new Set();
+let multiTouchOccurred = false;
+
 function clearLongPressTimer() {
   if (longPressTimer !== null) {
     clearTimeout(longPressTimer);
@@ -122,6 +129,9 @@ function updateCursor(pointerType, x, y) {
 }
 
 canvas.addEventListener("pointerdown", (e) => {
+  activePointerIds.add(e.pointerId);
+  if (activePointerIds.size > 1) multiTouchOccurred = true;
+
   const rect = canvas.getBoundingClientRect();
   downPos = { x: e.clientX - rect.left, y: e.clientY - rect.top };
   downOnCell = !!screenToHex(downPos.x, downPos.y);
@@ -154,8 +164,12 @@ canvas.addEventListener("pointermove", (e) => {
 });
 
 canvas.addEventListener("pointerup", (e) => {
+  activePointerIds.delete(e.pointerId);
+  const wasMultiTouch = multiTouchOccurred;
+  if (activePointerIds.size === 0) multiTouchOccurred = false; // gesture fully ended - reset for the next one
+
   clearLongPressTimer();
-  if (longPressFired || e.button === 2) {
+  if (longPressFired || e.button === 2 || wasMultiTouch) {
     downPos = null;
     return;
   }
@@ -181,6 +195,13 @@ canvas.addEventListener("pointerup", (e) => {
     infoCard.hide();
   }
   dirty = true;
+});
+
+canvas.addEventListener("pointercancel", (e) => {
+  activePointerIds.delete(e.pointerId);
+  if (activePointerIds.size === 0) multiTouchOccurred = false;
+  clearLongPressTimer();
+  downPos = null;
 });
 
 canvas.addEventListener("contextmenu", (e) => {
