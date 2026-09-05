@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Pascalator logo preview</title>
+<style>
+  html, body { margin: 0; background: #444; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; min-height: 100vh; gap: 24px; }
+  canvas { image-rendering: pixelated; }
+  .swatch { display: flex; flex-direction: column; align-items: center; gap: 8px; font-family: sans-serif; color: #fff; }
+  .checkerboard { background-image: linear-gradient(45deg, #888 25%, transparent 25%), linear-gradient(-45deg, #888 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #888 75%), linear-gradient(-45deg, transparent 75%, #888 75%); background-size: 20px 20px; background-position: 0 0, 0 10px, 10px -10px, -10px 0px; }
+</style>
+</head>
+<body>
+  <div class="swatch"><canvas id="c512" width="512" height="512" style="width:256px;height:256px;"></canvas><span>512 (icon-512.png)</span></div>
+  <div class="swatch"><canvas id="c192" width="192" height="192" style="width:192px;height:192px;"></canvas><span>192 (icon-192.png)</span></div>
+  <div class="swatch"><canvas id="c180" width="180" height="180"></canvas><span>180 (apple-touch-icon.png)</span></div>
+  <div class="swatch"><canvas id="c32" width="32" height="32" style="width:128px;height:128px;"></canvas><span>32 (favicon-32.png)</span></div>
+  <div class="swatch checkerboard"><canvas id="cTransparent" width="512" height="512" style="width:256px;height:256px;"></canvas><span>transparent (logo-transparent.png)</span></div>
+
+<script>
+const SQRT3 = Math.sqrt(3);
+
+function hexCorners(cx, cy, radius) {
+  const pts = [];
+  for (let i = 0; i < 6; i++) {
+    const angle = (Math.PI / 180) * (60 * i - 30);
+    pts.push([cx + radius * Math.cos(angle), cy + radius * Math.sin(angle)]);
+  }
+  return pts;
+}
+
+function hslToRgb(h, s, l) {
+  h = ((h % 360) + 360) % 360;
+  const c = (1 - Math.abs(2 * l - 1)) * s;
+  const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+  const m = l - c / 2;
+  let r1, g1, b1;
+  if (h < 60) [r1, g1, b1] = [c, x, 0];
+  else if (h < 120) [r1, g1, b1] = [x, c, 0];
+  else if (h < 180) [r1, g1, b1] = [0, c, x];
+  else if (h < 240) [r1, g1, b1] = [0, x, c];
+  else if (h < 300) [r1, g1, b1] = [x, 0, c];
+  else [r1, g1, b1] = [c, 0, x];
+  return `rgb(${Math.round((r1 + m) * 255)}, ${Math.round((g1 + m) * 255)}, ${Math.round((b1 + m) * 255)})`;
+}
+
+function drawLogo(canvas, { transparent = false } = {}) {
+  const size = canvas.width;
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, size, size);
+
+  if (!transparent) {
+    // Dark navy gradient, full-bleed to every corner - the OS applies its own mask shape
+    // (iOS "squircle", Android's various shapes) on top, so a pre-rounded icon here would
+    // either double up or leave a visible seam/background colour showing through the gap.
+    const bg = ctx.createLinearGradient(0, 0, size, size);
+    bg.addColorStop(0, "#141a30");
+    bg.addColorStop(1, "#05070f");
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, size, size);
+  }
+
+  const rows = 4; // n = 0..3
+  const r = size * 0.115; // hex radius, tuned so the pyramid fits the safe area
+  const hexW = SQRT3 * r;
+
+  const maxN = rows - 1;
+  const totalHeight = 1.5 * maxN * r + 2 * r;
+  const offsetX = size / 2;
+  const offsetY = (size - totalHeight) / 2 + r;
+
+  for (let n = 0; n < rows; n++) {
+    for (let k = 0; k <= n; k++) {
+      const cx = offsetX + SQRT3 * (k - n / 2) * r;
+      const cy = offsetY + 1.5 * n * r;
+      const corners = hexCorners(cx, cy, r * 0.92);
+
+      const path = new Path2D();
+      path.moveTo(corners[0][0], corners[0][1]);
+      for (let i = 1; i < 6; i++) path.lineTo(corners[i][0], corners[i][1]);
+      path.closePath();
+
+      const t = n === 0 ? 1 : k / n;
+      const centred = 1 - Math.abs(t - 0.5) * 2; // 0 at edges, 1 at centre
+      ctx.fillStyle = hslToRgb(285 - 105 * centred, 0.85, 0.55);
+      ctx.fill(path);
+
+      ctx.save();
+      ctx.lineWidth = Math.max(1, size * 0.012);
+      ctx.strokeStyle = "#22e8f0";
+      ctx.shadowColor = "#22e8f0";
+      ctx.shadowBlur = size * 0.03;
+      ctx.stroke(path);
+      ctx.restore();
+    }
+  }
+}
+
+drawLogo(document.getElementById("c512"));
+drawLogo(document.getElementById("c192"));
+drawLogo(document.getElementById("c180"));
+drawLogo(document.getElementById("c32"));
+drawLogo(document.getElementById("cTransparent"), { transparent: true });
+</script>
+</body>
+</html>

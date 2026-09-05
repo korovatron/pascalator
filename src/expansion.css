@@ -10,6 +10,13 @@
   padding: 8px 20px 40px;
 }
 
+.expansion-main,
+.expansion-main * {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none; /* suppress iOS's long-press text-selection magnifier */
+}
+
 .expansion-controls {
   display: flex;
   gap: 12px;

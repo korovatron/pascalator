@@ -64,6 +64,26 @@ a {
   text-align: center;
 }
 
+.landing-footer {
+  padding: 16px 24px 24px;
+  text-align: center;
+  font-size: 13px;
+  color: #a9adc1;
+}
+
+.landing-footer p {
+  margin: 4px 0;
+}
+
+.landing-footer a {
+  color: #22e8f0;
+  text-decoration: none;
+}
+
+.landing-footer a:hover {
+  text-decoration: underline;
+}
+
 .landing h1 {
   font-size: clamp(32px, 6vw, 56px);
   margin: 0;
