@@ -6,6 +6,15 @@
   box-sizing: border-box;
 }
 
+:root {
+  /* iOS only reports non-zero safe-area-inset-* once viewport-fit=cover is set on the
+     viewport meta tag - see src/style.css / fixIOSViewportBug() in main.js. */
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
+}
+
 html, body {
   margin: 0;
   min-height: 100%;
@@ -28,7 +37,7 @@ a {
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 16px 20px;
+  padding: calc(16px + var(--safe-area-top, 0px)) calc(20px + var(--safe-area-right, 0px)) 16px calc(20px + var(--safe-area-left, 0px));
 }
 
 .portal-header h1 {
@@ -60,12 +69,12 @@ a {
   align-items: center;
   justify-content: center;
   gap: 40px;
-  padding: 24px;
+  padding: calc(24px + var(--safe-area-top, 0px)) calc(24px + var(--safe-area-right, 0px)) 24px calc(24px + var(--safe-area-left, 0px));
   text-align: center;
 }
 
 .landing-footer {
-  padding: 16px 24px 24px;
+  padding: 16px calc(24px + var(--safe-area-right, 0px)) calc(24px + var(--safe-area-bottom, 0px)) calc(24px + var(--safe-area-left, 0px));
   text-align: center;
   font-size: 13px;
   color: #a9adc1;

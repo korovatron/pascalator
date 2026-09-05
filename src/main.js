@@ -23,11 +23,23 @@ function fixIOSViewportBug() {
 
     // iOS PWA/standalone mode can under-report the height by ~59px (iPhone) / ~32px (iPad)
     // in portrait - compensate up to the real screen height when the shortfall looks like
-    // this specific bug (small enough that it's not just a genuinely short window).
+    // this specific bug (small enough that it's not just a genuinely short window). iOS
+    // calculates safe-area-inset-top asynchronously after launch, so --safe-area-top (see
+    // style.css, needs viewport-fit=cover to be non-zero at all) may still read 0 here on
+    // the earliest staggered check - remainingShortfall re-tests after accounting for it.
     if (isIOS && isPWA && window.innerHeight > window.innerWidth) {
       const screenPortraitHeight = Math.max(window.screen.height, window.screen.width);
       const difference = screenPortraitHeight - viewportHeight;
-      if (difference > 15 && difference <= 180) viewportHeight = screenPortraitHeight;
+
+      if (difference > 15 && difference <= 180) {
+        const safeTopPx = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--safe-area-top")) || 0;
+        const heightWithSafeTop = viewportHeight + safeTopPx;
+        const remainingShortfall = screenPortraitHeight - heightWithSafeTop;
+
+        if (remainingShortfall > 8) viewportHeight = screenPortraitHeight;
+        else if (safeTopPx > 0) viewportHeight = heightWithSafeTop;
+        else viewportHeight = screenPortraitHeight;
+      }
     }
 
     document.documentElement.style.setProperty("--actual-vh", `${viewportHeight}px`);
@@ -45,12 +57,15 @@ function fixIOSViewportBug() {
   };
 
   // iOS doesn't always have the correct value ready right at launch, so re-check a few
-  // times over the next ~2s rather than relying on a single measurement.
+  // times over the next ~2.4s rather than relying on a single measurement.
   setActualViewportHeight();
-  scheduleUpdates([50, 100, 200, 350, 600, 900, 1300, 1800]);
+  scheduleUpdates([50, 100, 200, 350, 600, 900, 1300, 1800, 2400]);
 
   window.addEventListener("resize", setActualViewportHeight);
   window.addEventListener("orientationchange", () => scheduleUpdates([50, 100, 200, 350, 600, 900, 1300, 1800]));
+  if (screen.orientation) {
+    screen.orientation.addEventListener("change", () => scheduleUpdates([50, 100, 200, 350, 600, 900, 1300, 1800]));
+  }
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden) scheduleUpdates([50, 200, 500, 900]); // app resumed from background
   });

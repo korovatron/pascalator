@@ -2,6 +2,15 @@
   box-sizing: border-box;
 }
 
+:root {
+  /* iOS only reports non-zero safe-area-inset-* once viewport-fit=cover is set on the
+     viewport meta tag - see fixIOSViewportBug() in main.js for the related height fix. */
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
+}
+
 html, body {
   margin: 0;
   padding: 0;
@@ -45,7 +54,7 @@ html, body {
   display: flex;
   align-items: flex-start; /* keep the title/reset button pinned to the top even when the shading card/narrow controls grow taller */
   gap: 16px;
-  padding: 10px 16px;
+  padding: calc(10px + var(--safe-area-top, 0px)) calc(16px + var(--safe-area-right, 0px)) 10px calc(16px + var(--safe-area-left, 0px));
   background: linear-gradient(to bottom, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0));
   pointer-events: none;
   z-index: 10;
@@ -204,8 +213,8 @@ button:hover {
 
 #infoCard {
   position: absolute;
-  bottom: 16px;
-  right: 16px;
+  bottom: calc(16px + var(--safe-area-bottom, 0px));
+  right: calc(16px + var(--safe-area-right, 0px));
   width: 420px;
   max-height: calc(100vh - 32px);
   max-height: calc(100dvh - 32px);
