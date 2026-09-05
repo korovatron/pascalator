@@ -16,8 +16,8 @@ html, body {
   padding: 0;
   width: 100%;
   height: 100%;
-  height: 100dvh;
-  height: var(--actual-vh, 100dvh); /* corrected at runtime on iOS PWA - see fixIOSViewportBug() in main.js */
+  height: 100vh;
+  height: var(--actual-vh, 100vh); /* corrected at runtime on iOS PWA - see fixIOSViewportBug() in main.js */
   overflow: hidden;
   background: #000000;
   color: #e8e8f0;
@@ -29,8 +29,7 @@ html, body {
   inset: 0;
   width: 100vw;
   height: 100vh;
-  height: 100dvh; /* tracks the actual visible viewport on mobile browsers with a collapsing address bar */
-  height: var(--actual-vh, 100dvh); /* iOS PWA standalone-mode fix - see fixIOSViewportBug() in main.js */
+  height: var(--actual-vh, 100vh); /* iOS PWA standalone-mode fix - see fixIOSViewportBug() in main.js */
 }
 
 #triangleCanvas {
@@ -216,8 +215,7 @@ button:hover {
   bottom: calc(16px + var(--safe-area-bottom, 0px));
   right: calc(16px + var(--safe-area-right, 0px));
   width: 420px;
-  max-height: calc(100vh - 32px);
-  max-height: calc(100dvh - 32px);
+  max-height: calc(var(--actual-vh, 100vh) - 32px - var(--safe-area-bottom, 0px));
   overflow-y: auto;
   background: rgba(18, 20, 32, 0.96);
   border: 1px solid #22e8f0;
