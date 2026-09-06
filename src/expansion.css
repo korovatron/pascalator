@@ -36,6 +36,10 @@
   gap: 12px;
 }
 
+.expansion-controls-bottom.hidden {
+  display: none;
+}
+
 .expansion-controls button {
   padding: 10px 18px;
   border-radius: 6px;

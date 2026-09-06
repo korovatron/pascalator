@@ -27,6 +27,9 @@ const questionEl = document.getElementById("expansionQuestion");
 const stepsEl = document.getElementById("expansionSteps");
 const newQuestionBtn = document.getElementById("newQuestionBtn");
 const revealBtn = document.getElementById("revealBtn");
+const controlsBottomEl = document.getElementById("expansionControlsBottom");
+const newQuestionBtnBottom = document.getElementById("newQuestionBtnBottom");
+const revealBtnBottom = document.getElementById("revealBtnBottom");
 
 let steps = []; // array of { latex, colored } for the current question
 let revealedCount = 0;
@@ -284,9 +287,16 @@ const NARROW_SCREEN_QUERY = "(max-width: 600px)"; // matches the breakpoint used
 
 function updateRevealButton() {
   const done = revealedCount >= steps.length;
-  revealBtn.disabled = done;
   const narrow = window.matchMedia(NARROW_SCREEN_QUERY).matches;
-  revealBtn.textContent = done ? "All steps revealed" : narrow ? "Reveal next" : "Reveal next step";
+  const label = done ? "All steps revealed" : narrow ? "Reveal next" : "Reveal next step";
+  for (const btn of [revealBtn, revealBtnBottom]) {
+    btn.disabled = done;
+    btn.textContent = label;
+  }
+  // The bottom controls duplicate the top ones (added so a long revealed-steps list doesn't force
+  // scrolling all the way back up just to reveal the next step) - only worth showing once there's
+  // actually a gap to save scrolling from, i.e. after at least one step has been revealed.
+  controlsBottomEl.classList.toggle("hidden", revealedCount === 0);
 }
 
 const MIN_STEP_FONT_SIZE = 12;
@@ -386,10 +396,14 @@ function revealNextStep() {
   }
 
   updateRevealButton();
-  box.scrollIntoView({ behavior: "smooth", block: "nearest" }); // in case the newly-revealed step lands below the fold
+  // Scroll all the way down (not just the new step into view) so the bottom button bar is
+  // visible too - otherwise users can't tell it needs a further scroll to reach it.
+  window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "smooth" });
 }
 
 newQuestionBtn.addEventListener("click", generateQuestion);
 revealBtn.addEventListener("click", revealNextStep);
+newQuestionBtnBottom.addEventListener("click", generateQuestion);
+revealBtnBottom.addEventListener("click", revealNextStep);
 
 generateQuestion();
