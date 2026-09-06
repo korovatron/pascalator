@@ -230,6 +230,10 @@ function generateQuestion() {
   revealedCount = 0;
   stepsEl.innerHTML = "";
   updateRevealButton();
+  // Without this, iOS Safari can leave the page scrolled to wherever it was (often mid/bottom
+  // of the old, now-cleared steps list), stranding the new question's header just off-screen
+  // instead of snapping back up now that the page is shorter.
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 /** Renders a small glowing strip of hexes for row n onto the given canvas, coefficients coloured to match the coefficient colour used in the steps. */
