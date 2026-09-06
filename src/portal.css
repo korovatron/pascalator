@@ -25,7 +25,13 @@ html, body {
      blocks it guesses are the main reading column - KaTeX's absolutely-positioned
      spans (e.g. a \binom fraction) are exactly what that heuristic misfires on. */
   -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
   text-size-adjust: 100%;
+}
+
+html {
+  font-size: 100%; /* explicit root anchor, so nested %/em sizing (KaTeX's own cascade included) has a well-defined base */
 }
 
 body {

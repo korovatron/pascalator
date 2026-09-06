@@ -25,6 +25,8 @@ html, body {
   /* Guards against Android Chrome's "font boosting" auto-inflating text size - see
      the matching rule in portal.css for the page where this actually bites (expansion.html). */
   -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
   text-size-adjust: 100%;
 }
 
