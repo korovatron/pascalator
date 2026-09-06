@@ -198,10 +198,13 @@ function renderMiniRow(canvas, n) {
   }
 }
 
+const NARROW_SCREEN_QUERY = "(max-width: 600px)"; // matches the breakpoint used elsewhere for mobile-portrait tweaks
+
 function updateRevealButton() {
   const done = revealedCount >= steps.length;
   revealBtn.disabled = done;
-  revealBtn.textContent = done ? "All steps revealed" : "Reveal next step";
+  const narrow = window.matchMedia(NARROW_SCREEN_QUERY).matches;
+  revealBtn.textContent = done ? "All steps revealed" : narrow ? "Reveal next" : "Reveal next step";
 }
 
 const MIN_STEP_FONT_SIZE = 12;
@@ -225,6 +228,7 @@ function fitKatexBox(el) {
 function refitAll() {
   fitKatexBox(questionEl);
   for (const inner of stepsEl.querySelectorAll(".expansion-step-inner")) fitKatexBox(inner);
+  updateRevealButton();
 }
 
 window.addEventListener("resize", refitAll);

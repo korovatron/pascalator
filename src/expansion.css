@@ -43,6 +43,13 @@
   cursor: default;
 }
 
+/* Narrow/mobile-portrait screens: drop the home-link's leading arrow to save header width. */
+@media (max-width: 600px) {
+  .home-link-arrow {
+    display: none;
+  }
+}
+
 .expansion-question {
   width: 100%;
   max-width: min(2200px, 96vw);
