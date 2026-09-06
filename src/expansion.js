@@ -122,13 +122,14 @@ function colorize(color, latex) {
 function signedTermStrings(terms) {
   return terms.map(({ value, absLatex }, i) => {
     const sign = value < 0 ? "-" : i === 0 ? "" : "+";
-    return i === 0 ? `${sign}${absLatex}` : `${sign} ${absLatex}`;
+    // "\ " is LaTeX's explicit control-space - a plain space character is ignored in math mode.
+    return i === 0 ? `${sign}${absLatex}` : `${sign}\\ ${absLatex}`;
   });
 }
 
 /** Same idea as signedTermStrings, for terms that are always added (never subtracted) - just needs a leading "+" on every term after the first. */
 function plusJoinedTermStrings(terms) {
-  return terms.map((t, i) => (i === 0 ? t : `+ ${t}`));
+  return terms.map((t, i) => (i === 0 ? t : `+\\ ${t}`));
 }
 
 /** Builds a fresh random question and its full set of reveal steps. */
@@ -385,6 +386,7 @@ function revealNextStep() {
   }
 
   updateRevealButton();
+  box.scrollIntoView({ behavior: "smooth", block: "nearest" }); // in case the newly-revealed step lands below the fold
 }
 
 newQuestionBtn.addEventListener("click", generateQuestion);
