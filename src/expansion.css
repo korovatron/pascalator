@@ -52,16 +52,14 @@
   touch-action: manipulation; /* stop iOS Safari's rapid-tap native zoom on this button */
 }
 
-@media (hover: hover) and (pointer: fine) {
-  .expansion-controls button:hover:not(:disabled) {
-    background: #2a2f47;
-  }
+.expansion-controls button.hidden {
+  display: none;
 }
 
-.expansion-controls button:disabled {
-  border-color: #3a3d55;
-  color: #7c81a0;
-  cursor: default;
+@media (hover: hover) and (pointer: fine) {
+  .expansion-controls button:hover {
+    background: #2a2f47;
+  }
 }
 
 /* Narrow/mobile-portrait screens: drop the home-link's leading arrow to save header width. */

@@ -288,10 +288,13 @@ const NARROW_SCREEN_QUERY = "(max-width: 600px)"; // matches the breakpoint used
 function updateRevealButton() {
   const done = revealedCount >= steps.length;
   const narrow = window.matchMedia(NARROW_SCREEN_QUERY).matches;
-  const label = done ? "All steps revealed" : narrow ? "Reveal next" : "Reveal next step";
+  const label = narrow ? "Reveal next" : "Reveal next step";
   for (const btn of [revealBtn, revealBtnBottom]) {
-    btn.disabled = done;
     btn.textContent = label;
+    // Hidden (not just disabled) once done - a disabled button on iOS Safari still lets a
+    // double-tap gesture fall through to native zoom, since disabled elements aren't
+    // hit-tested for touch-action purposes; hiding it entirely sidesteps that.
+    btn.classList.toggle("hidden", done);
   }
   // The bottom controls duplicate the top ones (added so a long revealed-steps list doesn't force
   // scrolling all the way back up just to reveal the next step) - only worth showing once there's
