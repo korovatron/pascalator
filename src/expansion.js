@@ -17,6 +17,11 @@ const COEFF_RANGE = [1, 2, 3, 4];
 const POWER_MIN = 3;
 const POWER_MAX = 6;
 
+// Occasionally give one term an inner power (e.g. b^2) or make it a reciprocal (e.g. 1/y),
+// instead of always a plain "coeff*letter" term - only about 1 in 5 questions.
+const SPECIAL_TERM_PROBABILITY = 0.2;
+const SPECIAL_INNER_POWERS = [2, 3];
+
 const questionEl = document.getElementById("expansionQuestion");
 const stepsEl = document.getElementById("expansionSteps");
 const newQuestionBtn = document.getElementById("newQuestionBtn");
@@ -43,21 +48,64 @@ function nCr(n, k) {
   return Math.round(result);
 }
 
-/** LaTeX for `coeff*letter`, simplifying the coefficient away when it's 1 or -1 (e.g. "x", "-y", "3x"). */
-function coeffLetter(coeff, letter) {
-  if (coeff === 1) return letter;
-  if (coeff === -1) return `-${letter}`;
-  return `${coeff}${letter}`;
+/**
+ * LaTeX for `coeff*letter^innerExp`, simplifying the coefficient away when it's 1 or -1
+ * (e.g. "x", "-y", "3x"). `innerExp` defaults to 1 (plain letter); 2 or 3 renders as a power
+ * (e.g. "b^{2}"); -1 renders as a reciprocal fraction (e.g. "\frac{1}{y}", or "-\frac{1}{y}").
+ */
+function coeffLetter(coeff, letter, innerExp = 1) {
+  if (innerExp < 0) {
+    const letterPart = Math.abs(innerExp) === 1 ? letter : `${letter}^{${Math.abs(innerExp)}}`;
+    const sign = coeff < 0 ? "-" : "";
+    const numerator = Math.abs(coeff) === 1 ? "1" : `${Math.abs(coeff)}`;
+    return `${sign}\\frac{${numerator}}{${letterPart}}`;
+  }
+  const letterPart = innerExp === 1 ? letter : `${letter}^{${innerExp}}`;
+  if (coeff === 1) return letterPart;
+  if (coeff === -1) return `-${letterPart}`;
+  return `${coeff}${letterPart}`;
 }
 
-/** LaTeX for `(coeffBase*letter)^exponent`, fully evaluated (e.g. exponent 0 -> "1", exponent 1 -> "2x", else "8x^{3}"). */
-function evaluatedPower(coeffBase, letter, exponent) {
-  if (exponent === 0) return "1";
-  const numeric = Math.pow(coeffBase, exponent);
-  const varPart = exponent === 1 ? letter : `${letter}^{${exponent}}`;
-  if (numeric === 1) return varPart;
-  if (numeric === -1) return `-${varPart}`;
-  return `${numeric}${varPart}`;
+/**
+ * LaTeX for `(coeffBase*letter^innerExp)^outerExponent`, fully evaluated (e.g. outerExponent 0
+ * -> "1"; innerExp 1 gives the original behaviour, e.g. "2x" or "8x^{3}"; innerExp 2/3 combines
+ * into the total exponent, e.g. "b^{8}"; innerExp -1 (reciprocal) renders as a fraction, e.g.
+ * "\frac{1}{y^{3}}").
+ */
+function evaluatedPower(coeffBase, letter, innerExp, outerExponent) {
+  if (outerExponent === 0) return "1";
+  const numeric = Math.pow(coeffBase, outerExponent);
+  const totalLetterExp = innerExp * outerExponent;
+  const absLetterExp = Math.abs(totalLetterExp);
+  const letterPart = absLetterExp === 1 ? letter : `${letter}^{${absLetterExp}}`;
+  if (totalLetterExp >= 0) {
+    if (numeric === 1) return letterPart;
+    if (numeric === -1) return `-${letterPart}`;
+    return `${numeric}${letterPart}`;
+  }
+  const sign = numeric < 0 ? "-" : "";
+  const numerator = Math.abs(numeric) === 1 ? "1" : `${Math.abs(numeric)}`;
+  return `${sign}\\frac{${numerator}}{${letterPart}}`;
+}
+
+/**
+ * LaTeX for one signed final-answer monomial, given the total (possibly negative) exponent of
+ * each letter. Negative exponents (from a reciprocal term) move that letter to a denominator,
+ * rendered as a fraction (e.g. "\frac{5x}{y^{4}}") instead of a plain monomial.
+ */
+function finalTermLatex(absValue, letter1, exp1, letter2, exp2) {
+  const numFactors = [];
+  const denomFactors = [];
+  for (const [letter, exp] of [[letter1, exp1], [letter2, exp2]]) {
+    if (exp === 0) continue;
+    const absExp = Math.abs(exp);
+    const part = absExp === 1 ? letter : `${letter}^{${absExp}}`;
+    (exp > 0 ? numFactors : denomFactors).push(part);
+  }
+  const numeratorVarPart = numFactors.join("");
+  const numeratorStr = absValue === 1 && numeratorVarPart ? numeratorVarPart : `${absValue}${numeratorVarPart}`;
+  if (denomFactors.length === 0) return numeratorStr;
+  return `\\frac{${numeratorStr}}{${denomFactors.join("")}}`;
 }
 
 function colorize(color, latex) {
@@ -77,15 +125,30 @@ function joinSignedTerms(terms) {
 /** Builds a fresh random question and its full set of reveal steps. */
 function generateQuestion() {
   const [letter1, letter2] = pickLetters();
-  const a = COEFF_RANGE[randomInt(0, COEFF_RANGE.length - 1)];
-  const b = COEFF_RANGE[randomInt(0, COEFF_RANGE.length - 1)];
+  let a = COEFF_RANGE[randomInt(0, COEFF_RANGE.length - 1)];
+  let b = COEFF_RANGE[randomInt(0, COEFF_RANGE.length - 1)];
   const sign = Math.random() < 0.5 ? "+" : "-";
-  const signedB = sign === "-" ? -b : b;
   const n = randomInt(POWER_MIN, POWER_MAX);
 
-  const term1Bracket = coeffLetter(a, letter1);
-  const term2BracketAbs = coeffLetter(b, letter2);
-  const questionLatex = `(${term1Bracket} ${sign} ${term2BracketAbs})^{${n}}`;
+  // Pick which term (if any) gets an inner power/reciprocal this time, e.g. b^2, 3x^2, 1/y.
+  let innerExp1 = 1;
+  let innerExp2 = 1;
+  if (Math.random() < SPECIAL_TERM_PROBABILITY) {
+    const isReciprocal = Math.random() < 0.5;
+    const innerExp = isReciprocal ? -1 : SPECIAL_INNER_POWERS[randomInt(0, SPECIAL_INNER_POWERS.length - 1)];
+    if (Math.random() < 0.5) {
+      innerExp1 = innerExp;
+      if (isReciprocal) a = 1; // keep reciprocal terms as a plain "1/letter", matching the worked examples
+    } else {
+      innerExp2 = innerExp;
+      if (isReciprocal) b = 1;
+    }
+  }
+  const signedB = sign === "-" ? -b : b;
+
+  const term1Bracket = coeffLetter(a, letter1, innerExp1);
+  const term2BracketAbs = coeffLetter(b, letter2, innerExp2);
+  const questionLatex = `\\left(${term1Bracket} ${sign} ${term2BracketAbs}\\right)^{${n}}`;
 
   // Step 1: symbolic binomial expansion, coefficients as \binom{n}{k}.
   const step1Terms = [];
@@ -98,36 +161,37 @@ function generateQuestion() {
 
   for (let k = 0; k <= n; k++) {
     const powA = n - k;
-    const term1Signed = coeffLetter(a, letter1);
-    const term2Signed = coeffLetter(signedB, letter2);
+    const term1Signed = coeffLetter(a, letter1, innerExp1);
+    const term2Signed = coeffLetter(signedB, letter2, innerExp2);
 
     step1Terms.push(
       colorize(COLOR_COEFF, `\\binom{${n}}{${k}}`) +
-        colorize(COLOR_TERM1, `(${term1Signed})^{${powA}}`) +
-        colorize(COLOR_TERM2, `(${term2Signed})^{${k}}`)
+        colorize(COLOR_TERM1, `\\left(${term1Signed}\\right)^{${powA}}`) +
+        colorize(COLOR_TERM2, `\\left(${term2Signed}\\right)^{${k}}`)
     );
 
     const coeffValue = nCr(n, k);
     step2Terms.push(
       colorize(COLOR_COEFF, `${coeffValue}`) +
-        colorize(COLOR_TERM1, `(${term1Signed})^{${powA}}`) +
-        colorize(COLOR_TERM2, `(${term2Signed})^{${k}}`)
+        colorize(COLOR_TERM1, `\\left(${term1Signed}\\right)^{${powA}}`) +
+        colorize(COLOR_TERM2, `\\left(${term2Signed}\\right)^{${k}}`)
     );
 
-    const part1 = evaluatedPower(a, letter1, powA);
-    const part2 = evaluatedPower(signedB, letter2, k);
+    const part1 = evaluatedPower(a, letter1, innerExp1, powA);
+    const part2 = evaluatedPower(signedB, letter2, innerExp2, k);
     step3Terms.push(
-      colorize(COLOR_COEFF, `${coeffValue}`) + colorize(COLOR_TERM1, `(${part1})`) + colorize(COLOR_TERM2, `(${part2})`)
+      colorize(COLOR_COEFF, `${coeffValue}`) +
+        colorize(COLOR_TERM1, `\\left(${part1}\\right)`) +
+        colorize(COLOR_TERM2, `\\left(${part2}\\right)`)
     );
 
     const combinedValue = coeffValue * Math.pow(a, powA) * Math.pow(signedB, k);
-    const varPart = (powA >= 1 ? (powA >= 2 ? `${letter1}^{${powA}}` : letter1) : "") + (k >= 1 ? (k >= 2 ? `${letter2}^{${k}}` : letter2) : "");
     const absValue = Math.abs(combinedValue);
-    const absLatex = absValue === 1 && varPart ? varPart : `${absValue}${varPart}`;
+    const absLatex = finalTermLatex(absValue, letter1, innerExp1 * powA, letter2, innerExp2 * k);
     finalTerms.push({ value: combinedValue, absLatex });
   }
 
-  const coloredQuestionLatex = `(${colorize(COLOR_TERM1, term1Bracket)} ${colorize(COLOR_TERM2, `${sign} ${term2BracketAbs}`)})^{${n}}`;
+  const coloredQuestionLatex = `\\left(${colorize(COLOR_TERM1, term1Bracket)} ${colorize(COLOR_TERM2, `${sign} ${term2BracketAbs}`)}\\right)^{${n}}`;
 
   steps = [
     { type: "katex", latex: coloredQuestionLatex, colored: true, noEquals: true },
