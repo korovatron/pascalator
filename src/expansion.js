@@ -113,14 +113,22 @@ function colorize(color, latex) {
   return `\\textcolor{${color}}{${latex}}`;
 }
 
-/** Joins signed terms ({value, absLatex}) into "term1 - term2 + term3 ..." with correct leading sign. */
-function joinSignedTerms(terms) {
-  let out = "";
-  terms.forEach(({ value, absLatex }, i) => {
+/**
+ * Turns terms ({value, absLatex}) into an array of individually-rendered LaTeX strings, one
+ * per term, each with its own correct leading sign baked in (e.g. ["5x^{2}", "-3y^{4}"]) -
+ * rendered as separate flex items (see revealNextStep) rather than one long joined string, so
+ * a step can wrap onto extra lines on a narrow screen instead of ever needing horizontal scroll.
+ */
+function signedTermStrings(terms) {
+  return terms.map(({ value, absLatex }, i) => {
     const sign = value < 0 ? "-" : i === 0 ? "" : "+";
-    out += i === 0 ? `${sign}${absLatex}` : ` ${sign} ${absLatex}`;
+    return i === 0 ? `${sign}${absLatex}` : `${sign} ${absLatex}`;
   });
-  return out;
+}
+
+/** Same idea as signedTermStrings, for terms that are always added (never subtracted) - just needs a leading "+" on every term after the first. */
+function plusJoinedTermStrings(terms) {
+  return terms.map((t, i) => (i === 0 ? t : `+ ${t}`));
 }
 
 /** Builds a fresh random question and its full set of reveal steps. */
@@ -197,15 +205,23 @@ function generateQuestion() {
   steps = [
     { type: "katex", latex: coloredQuestionLatex, colored: true, noEquals: true },
     { type: "pascalRow", n },
-    { type: "katex", latex: step1Terms.join(" + "), colored: true },
-    { type: "katex", latex: step2Terms.join(" + "), colored: true },
-    { type: "katex", latex: step3Terms.join(" + "), colored: true },
-    { type: "katex", latex: joinSignedTerms(finalTerms), colored: false },
+    { type: "katexTerms", terms: plusJoinedTermStrings(step1Terms), colored: true },
+    { type: "katexTerms", terms: plusJoinedTermStrings(step2Terms), colored: true },
+    { type: "katexTerms", terms: plusJoinedTermStrings(step3Terms), colored: true },
+    { type: "katexTerms", terms: signedTermStrings(finalTerms), colored: false },
   ];
 
-  questionEl.textContent = ""; // cleared then re-rendered via KaTeX below
-  window.katex?.render(`\\text{Expand } ${questionLatex}`, questionEl, { throwOnError: false, displayMode: true });
-  fitKatexBox(questionEl);
+  // "Expand" and the bracket are rendered as two separate KaTeX spans (not one string) so the
+  // title can wrap between them on a narrow screen instead of ever needing horizontal scroll.
+  questionEl.innerHTML = "";
+  const expandSpan = document.createElement("span");
+  window.katex?.render("\\text{Expand}", expandSpan, { throwOnError: false, displayMode: true });
+  const bracketSpan = document.createElement("span");
+  bracketSpan.className = "expansion-question-bracket";
+  window.katex?.render(questionLatex, bracketSpan, { throwOnError: false, displayMode: true });
+  questionEl.appendChild(expandSpan);
+  questionEl.appendChild(bracketSpan);
+  fitBracketToQuestion(bracketSpan);
 
   revealedCount = 0;
   stepsEl.innerHTML = "";
@@ -290,9 +306,30 @@ function fitKatexBox(el) {
   }
 }
 
+/**
+ * Rare fallback for when the bracket alone doesn't fit on its own flex line inside
+ * .expansion-question: shrinks its font-size until it does. Deliberately not CSS
+ * overflow-x:auto (see the CSS comment on .expansion-question-bracket) - measures against
+ * the question container's own width, since the bracket itself is a shrink-to-fit flex item
+ * with no fixed width of its own to overflow within.
+ */
+function fitBracketToQuestion(bracketSpan) {
+  bracketSpan.style.fontSize = "";
+  let guard = 0;
+  while (bracketSpan.scrollWidth > questionEl.clientWidth && guard++ < 30) {
+    const current = parseFloat(getComputedStyle(bracketSpan).fontSize);
+    if (current <= MIN_STEP_FONT_SIZE) break;
+    bracketSpan.style.fontSize = `${current - 1}px`;
+  }
+}
+
 function refitAll() {
-  fitKatexBox(questionEl);
-  for (const inner of stepsEl.querySelectorAll(".expansion-step-inner")) fitKatexBox(inner);
+  // Only the single-expression "scroll" fallback step (no wrap points available) ever needs
+  // shrinking - the wrap-based question title and multi-term steps handle narrow screens by
+  // wrapping onto extra lines instead, so they never need this.
+  for (const inner of stepsEl.querySelectorAll(".expansion-step-inner--scroll")) fitKatexBox(inner);
+  const bracketSpan = questionEl.querySelector(".expansion-question-bracket");
+  if (bracketSpan) fitBracketToQuestion(bracketSpan);
   updateRevealButton();
 }
 
@@ -317,9 +354,28 @@ function revealNextStep() {
     row.appendChild(canvas);
     box.appendChild(row);
     renderMiniRow(canvas, step.n);
-  } else {
+  } else if (step.type === "katexTerms") {
+    // Several terms joined by +/- - each rendered as its own KaTeX span in a flex-wrap row, so
+    // the row wraps onto extra lines on a narrow screen instead of ever needing horizontal scroll.
     const inner = document.createElement("div");
-    inner.className = "expansion-step-inner";
+    inner.className = "expansion-step-inner expansion-step-inner--wrap";
+    box.appendChild(inner);
+
+    const eqSpan = document.createElement("span");
+    window.katex?.render("=", eqSpan, { throwOnError: false, displayMode: true });
+    inner.appendChild(eqSpan);
+
+    for (const termLatex of step.terms) {
+      const termSpan = document.createElement("span");
+      window.katex?.render(termLatex, termSpan, { throwOnError: false, displayMode: true });
+      inner.appendChild(termSpan);
+    }
+
+    if (!step.colored) box.classList.add("expansion-step-final");
+  } else {
+    // Single, indivisible expression (no internal wrap points) - old horizontal-scroll/shrink-to-fit fallback.
+    const inner = document.createElement("div");
+    inner.className = "expansion-step-inner expansion-step-inner--scroll";
     box.appendChild(inner);
 
     const prefix = step.noEquals ? "" : "= ";

@@ -69,10 +69,25 @@
   max-width: min(2200px, 96vw);
   color: #ffffff;
   font-size: clamp(32px, 5vw, 64px);
-  overflow-x: auto;
-  overflow-y: hidden;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  column-gap: 0.3em;
+  row-gap: 0.05em;
   padding-top: 0.15em; /* KaTeX's outer exponent can rise above the line box and get clipped otherwise */
-  touch-action: manipulation; /* stop a swipe-to-scroll gesture here misfiring as a native double-tap-zoom */
+  touch-action: manipulation; /* stop a rapid tap here misfiring as a native double-tap-zoom */
+}
+
+/* Last-resort safety net: if the bracket alone is ever too wide even on its own flex line
+   (shouldn't happen in practice - it fits fine even without the "Expand" label competing for
+   width). No overflow property set at all (unlike the old scroll fallback) - overflow-x and
+   overflow-y can't be set independently (the CSS spec forces "auto" on both once either one
+   isn't "visible"), which was turning a fraction's harmless vertical ink overflow into a
+   spurious scrollbar even when nothing was actually overflowing horizontally. Handled via a
+   JS font-shrink instead (fitBracketToQuestion in expansion.js) so both axes stay truly visible. */
+.expansion-question-bracket {
+  max-width: 100%;
 }
 
 /* KaTeX's own display-mode margin (1em top/bottom) becomes huge at this font-size -
@@ -124,39 +139,51 @@
 .expansion-step-inner {
   color: #ffffff;
   font-size: clamp(22px, 2.4vw, 30px);
-  overflow-x: auto;
-  overflow-y: hidden;
   padding-top: 0.15em; /* KaTeX's outer exponent can rise above the line box and get clipped otherwise */
-  touch-action: manipulation; /* stop a swipe-to-scroll gesture here misfiring as a native double-tap-zoom */
+  touch-action: manipulation; /* stop a rapid tap here misfiring as a native double-tap-zoom */
 }
 
-/* Custom scrollbar for the horizontally-scrollable KaTeX boxes, instead of the plain
-   native one, when a step is too wide to fit even after widening/font-shrinking. */
-.expansion-question,
-.expansion-step-inner {
+/* Single, indivisible expression (no internal wrap points, e.g. the coloured question restated) -
+   old horizontal-scroll/shrink-to-fit fallback. */
+.expansion-step-inner--scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+/* Several terms joined by +/- - wrap onto extra lines on a narrow screen instead of ever needing
+   horizontal scroll (also sidesteps a Samsung Internet bug where an overflowing overflow-x:auto
+   KaTeX box balloons to a huge font size - see repo memory notes for the full diagnosis). */
+.expansion-step-inner--wrap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 0.35em;
+  row-gap: 0.15em;
+}
+
+/* Custom scrollbar for the horizontally-scrollable single-expression box, instead of the plain
+   native one, when it's too wide to fit even after font-shrinking (the multi-term steps and
+   question title never scroll - they wrap onto extra lines instead). */
+.expansion-step-inner--scroll {
   scrollbar-width: thin;
   scrollbar-color: #22e8f0 #171a28;
 }
 
-.expansion-question::-webkit-scrollbar,
-.expansion-step-inner::-webkit-scrollbar {
+.expansion-step-inner--scroll::-webkit-scrollbar {
   height: 10px;
 }
 
-.expansion-question::-webkit-scrollbar-track,
-.expansion-step-inner::-webkit-scrollbar-track {
+.expansion-step-inner--scroll::-webkit-scrollbar-track {
   background: #171a28;
   border-radius: 6px;
 }
 
-.expansion-question::-webkit-scrollbar-thumb,
-.expansion-step-inner::-webkit-scrollbar-thumb {
+.expansion-step-inner--scroll::-webkit-scrollbar-thumb {
   background: #22e8f0;
   border-radius: 6px;
   border: 2px solid #171a28;
 }
 
-.expansion-question::-webkit-scrollbar-thumb:hover,
-.expansion-step-inner::-webkit-scrollbar-thumb:hover {
+.expansion-step-inner--scroll::-webkit-scrollbar-thumb:hover {
   background: #6ff2ff;
 }
