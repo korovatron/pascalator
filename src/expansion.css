@@ -17,6 +17,18 @@
   -webkit-touch-callout: none; /* suppress iOS's long-press text-selection magnifier */
 }
 
+/* Samsung Internet's font-boosting/accessibility text-scaling doesn't reliably pick up
+   text-size-adjust set only on html/body for deeply-nested generated content (unlike
+   Chrome-for-Android, which is fine either way) - set it explicitly on every KaTeX
+   node too, since that's what was blowing up to a huge font size on that browser. */
+.expansion-question,
+.expansion-step-inner,
+.expansion-question *,
+.expansion-step-inner * {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 .expansion-controls {
   display: flex;
   gap: 12px;
@@ -57,7 +69,7 @@
   font-size: clamp(32px, 5vw, 64px);
   overflow-x: auto;
   overflow-y: hidden;
-  padding-top: 0.15em; /* KaTeX's outer exponent can rise above the line box and get clipped otherwise */
+  touch-action: manipulation; /* stop a swipe-to-scroll gesture here misfiring as a native double-tap-zoom */
 }
 
 /* KaTeX's own display-mode margin (1em top/bottom) becomes huge at this font-size -
@@ -111,7 +123,7 @@
   font-size: clamp(22px, 2.4vw, 30px);
   overflow-x: auto;
   overflow-y: hidden;
-  padding-top: 0.15em; /* KaTeX's outer exponent can rise above the line box and get clipped otherwise */
+  touch-action: manipulation; /* stop a swipe-to-scroll gesture here misfiring as a native double-tap-zoom */
 }
 
 /* Custom scrollbar for the horizontally-scrollable KaTeX boxes, instead of the plain
