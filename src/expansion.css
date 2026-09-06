@@ -51,8 +51,10 @@
   touch-action: manipulation; /* stop iOS Safari's rapid-tap native zoom on this button */
 }
 
-.expansion-controls button:hover:not(:disabled) {
-  background: #2a2f47;
+@media (hover: hover) and (pointer: fine) {
+  .expansion-controls button:hover:not(:disabled) {
+    background: #2a2f47;
+  }
 }
 
 .expansion-controls button:disabled {

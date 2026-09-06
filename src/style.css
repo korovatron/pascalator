@@ -99,9 +99,11 @@ html, body {
   background: #171a28;
 }
 
-.home-link:hover {
-  background: #2a2f47;
-  color: #ffffff;
+@media (hover: hover) and (pointer: fine) {
+  .home-link:hover {
+    background: #2a2f47;
+    color: #ffffff;
+  }
 }
 
 .shading-card {
@@ -406,8 +408,10 @@ button:hover {
   color: #e8e8f0;
 }
 
-#contextMenu button:hover {
-  background: #2a2f47;
+@media (hover: hover) and (pointer: fine) {
+  #contextMenu button:hover {
+    background: #2a2f47;
+  }
 }
 
 #helpModal {

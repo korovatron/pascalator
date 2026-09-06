@@ -70,9 +70,11 @@ a {
   background: #171a28;
 }
 
-.home-link:hover {
-  background: #2a2f47;
-  color: #ffffff;
+@media (hover: hover) and (pointer: fine) {
+  .home-link:hover {
+    background: #2a2f47;
+    color: #ffffff;
+  }
 }
 
 .landing {
@@ -102,8 +104,10 @@ a {
   text-decoration: none;
 }
 
-.landing-footer a:hover {
-  text-decoration: underline;
+@media (hover: hover) and (pointer: fine) {
+  .landing-footer a:hover {
+    text-decoration: underline;
+  }
 }
 
 .landing h1 {
@@ -169,10 +173,16 @@ a {
   transition: box-shadow 0.15s ease, transform 0.15s ease;
 }
 
-.card:hover,
 .card:focus-visible {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), 0 0 18px rgba(34, 232, 240, 0.85);
   transform: translateY(-2px);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), 0 0 18px rgba(34, 232, 240, 0.85);
+    transform: translateY(-2px);
+  }
 }
 
 .card.disabled {
@@ -182,8 +192,10 @@ a {
   opacity: 0.6;
 }
 
-.card.disabled:hover {
-  transform: none;
+@media (hover: hover) and (pointer: fine) {
+  .card.disabled:hover {
+    transform: none;
+  }
 }
 
 .card h2 {
