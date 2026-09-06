@@ -409,29 +409,4 @@ revealBtn.addEventListener("click", revealNextStep);
 newQuestionBtnBottom.addEventListener("click", generateQuestion);
 revealBtnBottom.addEventListener("click", revealNextStep);
 
-// iOS Safari tab mode ONLY (not installed-PWA/standalone, which has no such gestures at all)
-// ignores `touch-action`/viewport `user-scalable=no` for both pinch-zoom and (on some iOS
-// versions) double-tap-zoom - `touch-action: manipulation` on the KaTeX boxes wasn't enough
-// on its own. Suppressed at the JS level instead: `gesturestart`/`gesturechange` are Safari's
-// proprietary pinch/rotate gesture events (no-op on other browsers, safe to always attach);
-// a rapid second `touchend` inside a display-only (non-interactive) math box is treated as a
-// double-tap-zoom attempt and prevented - buttons are deliberately excluded from this so a
-// genuine fast double-click on "New question" etc. still registers both taps.
-document.addEventListener("gesturestart", (e) => e.preventDefault());
-document.addEventListener("gesturechange", (e) => e.preventDefault());
-
-const ZOOM_GUARD_SELECTOR = ".expansion-question, .expansion-step-inner, .expansion-step-row, .expansion-step-box";
-const DOUBLE_TAP_WINDOW_MS = 350;
-let lastMathTapTime = 0;
-document.addEventListener(
-  "touchend",
-  (e) => {
-    if (!e.target.closest(ZOOM_GUARD_SELECTOR)) return;
-    const now = Date.now();
-    if (now - lastMathTapTime <= DOUBLE_TAP_WINDOW_MS) e.preventDefault();
-    lastMathTapTime = now;
-  },
-  { passive: false }
-);
-
 generateQuestion();
