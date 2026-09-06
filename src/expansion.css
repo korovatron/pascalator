@@ -34,6 +34,7 @@
 .expansion-controls {
   display: flex;
   gap: 12px;
+  touch-action: manipulation; /* disabled buttons don't reliably honour their own touch-action in Safari - the tap gesture falls through to this container instead, still needs it set to stop native double-tap zoom */
 }
 
 .expansion-controls-bottom.hidden {
