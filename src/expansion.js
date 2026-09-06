@@ -21,6 +21,7 @@ const POWER_MAX = 6;
 // instead of always a plain "coeff*letter" term - only about 1 in 5 questions.
 const SPECIAL_TERM_PROBABILITY = 0.2;
 const SPECIAL_INNER_POWERS = [2, 3];
+const RECIPROCAL_NUMERATOR_RANGE = [1, 2, 3];
 
 const questionEl = document.getElementById("expansionQuestion");
 const stepsEl = document.getElementById("expansionSteps");
@@ -138,10 +139,10 @@ function generateQuestion() {
     const innerExp = isReciprocal ? -1 : SPECIAL_INNER_POWERS[randomInt(0, SPECIAL_INNER_POWERS.length - 1)];
     if (Math.random() < 0.5) {
       innerExp1 = innerExp;
-      if (isReciprocal) a = 1; // keep reciprocal terms as a plain "1/letter", matching the worked examples
+      if (isReciprocal) a = RECIPROCAL_NUMERATOR_RANGE[randomInt(0, RECIPROCAL_NUMERATOR_RANGE.length - 1)];
     } else {
       innerExp2 = innerExp;
-      if (isReciprocal) b = 1;
+      if (isReciprocal) b = RECIPROCAL_NUMERATOR_RANGE[randomInt(0, RECIPROCAL_NUMERATOR_RANGE.length - 1)];
     }
   }
   const signedB = sign === "-" ? -b : b;
