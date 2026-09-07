@@ -7,10 +7,16 @@
 //   - the final answer      -> plain white (the destination, not "working")
 import { hexCorners, SQRT3 } from "./hexgeom.js";
 
-const COLOR_COEFF = "#ff2fd6"; // hot magenta - distinct from the card's cyan border
-const COLOR_TERM1 = "#ffa726"; // amber/orange - red was hard to read on the dark background
-const COLOR_TERM2 = "#4ade80";
+// Two colour variants - dark-mode ones are unchanged/kept as-is (confirmed to work well), the
+// light-mode ones are darker/more saturated so they stay legible on a light card (e.g. when
+// projected in a classroom), while remaining clearly distinct from each other and from --text-primary.
+const COLORS_DARK = { coeff: "#ff2fd6", term1: "#ffa726", term2: "#4ade80" };
+const COLORS_LIGHT = { coeff: "#0000ff", term1: "#ff0000", term2: "#008000" };
 const HEX_FILL_COLOR = "rgba(18, 20, 32, 0.96)"; // same background as the working step cards
+
+function currentColors() {
+  return document.documentElement.getAttribute("data-theme") === "light" ? COLORS_LIGHT : COLORS_DARK;
+}
 
 const LETTER_POOL = ["x", "y", "a", "b", "m", "n", "p", "q"];
 const COEFF_RANGE = [1, 2, 3, 4];
@@ -137,6 +143,7 @@ function plusJoinedTermStrings(terms) {
 
 /** Builds a fresh random question and its full set of reveal steps. */
 function generateQuestion() {
+  const { coeff: COLOR_COEFF, term1: COLOR_TERM1, term2: COLOR_TERM2 } = currentColors();
   const [letter1, letter2] = pickLetters();
   let a = COEFF_RANGE[randomInt(0, COEFF_RANGE.length - 1)];
   let b = COEFF_RANGE[randomInt(0, COEFF_RANGE.length - 1)];
@@ -238,6 +245,7 @@ function generateQuestion() {
 
 /** Renders a small glowing strip of hexes for row n onto the given canvas, coefficients coloured to match the coefficient colour used in the steps. */
 function renderMiniRow(canvas, n) {
+  const { coeff: COLOR_COEFF } = currentColors();
   const dpr = window.devicePixelRatio || 1;
   const radius = 30;
   const hexWidth = SQRT3 * radius;
@@ -280,6 +288,7 @@ function renderMiniRow(canvas, n) {
     ctx.shadowBlur = 14;
     ctx.stroke();
     ctx.restore();
+
 
     ctx.font = `bold ${radius * 0.75}px "Cascadia Code", Consolas, monospace`;
     ctx.fillStyle = "#f0f0f5";

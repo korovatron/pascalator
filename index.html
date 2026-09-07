@@ -107,8 +107,18 @@
 }
 </script>
 
+<script>
+  (function () {
+    try {
+      if (localStorage.getItem("pascalator-theme") === "light") {
+        document.documentElement.setAttribute("data-theme", "light");
+      }
+    } catch (e) {}
+  })();
+</script>
 <link rel="stylesheet" href="src/portal.css" />
 <script defer src="src/register-sw.js"></script>
+<script defer src="src/theme.js"></script>
 </head>
 <body>
   <main class="landing">
@@ -130,6 +140,8 @@
         <p>Generate a random binomial expansion question and reveal the step-by-step solution - ideal for demonstrating live in a lesson.</p>
       </a>
     </div>
+
+    <button id="themeToggle" class="theme-toggle" type="button" aria-pressed="false">Switch to light mode</button>
   </main>
 
   <footer class="landing-footer">

@@ -9,6 +9,35 @@
   --safe-area-right: env(safe-area-inset-right, 0px);
   --safe-area-bottom: env(safe-area-inset-bottom, 0px);
   --safe-area-left: env(safe-area-inset-left, 0px);
+
+  /* Light/dark theme toggle (src/theme.js sets data-theme="light" on <html>, toggled from
+     index.html). Same variable set/values as src/portal.css (kept in sync manually - separate
+     stylesheets, no shared @import). */
+  --page-bg: #000000;
+  --text-primary: #e8e8f0;
+  --text-heading: #f0c93a;
+  --text-muted: #a9adc1;
+  --accent-cyan: #22e8f0;
+  --chip-bg: #171a28;
+  --chip-hover-bg: #2a2f47;
+  --card-bg: #12141f;
+  --heading-glow: none;
+  --btn-text-color: var(--text-primary);
+  --btn-text-weight: 400;
+}
+
+[data-theme="light"] {
+  --page-bg: #d8dbe6;
+  --text-primary: #20232f;
+  --text-heading: #7a1fa2;
+  --text-muted: #585c74;
+  --accent-cyan: #0a5a5e;
+  --chip-bg: #eef0f7;
+  --chip-hover-bg: #c7cbdb;
+  --card-bg: #e4e7f0;
+  --heading-glow: none;
+  --btn-text-color: #000000;
+  --btn-text-weight: 700;
 }
 
 html, body {
@@ -19,8 +48,8 @@ html, body {
   height: 100vh;
   height: 100lvh; /* large-viewport-height unit - no dynamic browser chrome to track in standalone mode, so this avoids a first-paint race condition 100dvh seems to have in portrait on iOS */
   overflow: hidden;
-  background: #000000;
-  color: #e8e8f0;
+  background: var(--page-bg);
+  color: var(--text-primary);
   font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   /* Guards against Android Chrome's "font boosting" auto-inflating text size - see
      the matching rule in portal.css for the page where this actually bites (expansion.html). */
@@ -64,7 +93,6 @@ html, body {
   align-items: flex-start; /* keep the title/reset button pinned to the top even when the shading card grows taller/wraps */
   gap: 16px;
   padding: calc(10px + var(--safe-area-top, 0px)) calc(16px + var(--safe-area-right, 0px)) 10px calc(16px + var(--safe-area-left, 0px));
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0));
   pointer-events: none;
   z-index: 10;
 }
@@ -84,37 +112,39 @@ html, body {
   font-size: 16px;
   font-weight: 600;
   margin: 0;
-  color: #f0c93a;
+  color: var(--text-heading);
   letter-spacing: 0.5px;
 }
 
 .home-link {
   font-size: 13px;
   line-height: 1.2;
-  color: #ffffff;
+  color: var(--btn-text-color);
+  font-weight: var(--btn-text-weight);
   text-decoration: none;
   padding: 5px 12px;
   border-radius: 6px;
-  border: 1px solid #22e8f0;
-  background: #171a28;
+  border: 1px solid var(--accent-cyan);
+  background: var(--chip-bg);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .home-link:hover {
-    background: #2a2f47;
-    color: #ffffff;
+    background: var(--chip-hover-bg);
+    color: var(--btn-text-color);
   }
 }
 
 .shading-card {
   margin-left: auto;
-  background: rgba(18, 20, 32, 0.96);
-  border: 1px solid #22e8f0;
+  background: var(--card-bg);
+  border: 1px solid var(--accent-cyan);
   border-radius: 10px;
   padding: 6px 14px 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), 0 0 8px rgba(34, 232, 240, 0.7), 0 0 18px rgba(34, 232, 240, 0.45);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
   font-size: 13px;
-  color: #ffffff;
+  color: var(--btn-text-color);
+  font-weight: var(--btn-text-weight);
 }
 
 .shading-card-body {
@@ -125,12 +155,12 @@ html, body {
 
 .shading-card legend {
   padding: 0 8px;
-  color: #ffffff;
+  color: var(--btn-text-color);
   font-weight: 600;
 }
 
 .shading-card input[type="radio"] {
-  accent-color: #22e8f0;
+  accent-color: var(--accent-cyan);
 }
 
 .label-short {
@@ -165,7 +195,7 @@ html, body {
 }
 
 .toolbar-group label {
-  color: #a9adc1;
+  color: var(--text-muted);
 }
 
 .shading-modulo-row.hidden {
@@ -182,7 +212,7 @@ html, body {
   padding: 0;
   border: 1px solid #3a3d55;
   border-radius: 4px;
-  background: #171a28;
+  background: var(--chip-bg);
   cursor: pointer;
 }
 
@@ -191,8 +221,8 @@ html, body {
   padding: 4px 6px;
   border-radius: 4px;
   border: 1px solid #3a3d55;
-  background: #171a28;
-  color: #e8e8f0;
+  background: var(--chip-bg);
+  color: var(--text-primary);
   font-size: 13px;
 }
 
@@ -200,8 +230,8 @@ html, body {
   padding: 5px 28px 5px 12px;
   border-radius: 4px;
   border: 1px solid #3a3d55;
-  background-color: #171a28;
-  color: #e8e8f0;
+  background-color: var(--chip-bg);
+  color: var(--text-primary);
   font-size: 13px;
   line-height: 1.2;
   font-family: inherit;
@@ -216,8 +246,14 @@ html, body {
   background-size: 12px;
 }
 
+[data-theme="light"] #shadingModulusWide {
+  /* Light theme flips the dropdown to a light chip with dark text - the white chevron above
+     would be invisible against it, so swap in a dark one to match. */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='%23171a28' d='M4 6l4 4 4-4z'/%3E%3C/svg%3E");
+}
+
 .shading-pattern-name {
-  color: #f0c93a;
+  color: var(--text-heading);
   font-style: italic;
 }
 
@@ -228,9 +264,10 @@ html, body {
 button {
   padding: 5px 12px;
   border-radius: 6px;
-  border: 1px solid #22e8f0;
-  background: #171a28;
-  color: #ffffff;
+  border: 1px solid var(--accent-cyan);
+  background: var(--chip-bg);
+  color: var(--btn-text-color);
+  font-weight: var(--btn-text-weight);
   font-size: 13px;
   line-height: 1.2;
   font-family: inherit;
@@ -238,7 +275,7 @@ button {
 }
 
 button:hover {
-  background: #2a2f47;
+  background: var(--chip-hover-bg);
 }
 
 #infoCard {
@@ -248,12 +285,12 @@ button:hover {
   width: 420px;
   max-height: calc(100dvh - 32px - var(--safe-area-bottom, 0px)); /* dvh (not lvh) so this tracks Safari's currently-visible address bar and doesn't get clipped underneath it */
   overflow-y: auto;
-  background: rgba(18, 20, 32, 0.96);
-  border: 1px solid #22e8f0;
+  background: var(--card-bg);
+  border: 1px solid var(--accent-cyan);
   border-radius: 10px;
   padding: 20px 24px;
   font-size: 22px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), 0 0 8px rgba(34, 232, 240, 0.7), 0 0 18px rgba(34, 232, 240, 0.45);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
   z-index: 20;
 }
 
@@ -293,15 +330,17 @@ button:hover {
   display: flex;
   justify-content: space-between;
   margin-bottom: 8px;
-  color: #ffffff;
+  color: var(--btn-text-color);
+  font-weight: var(--btn-text-weight);
 }
 
 .info-label {
-  color: #ffffff;
+  color: var(--btn-text-color);
+  font-weight: var(--btn-text-weight);
 }
 
 .info-value-box {
-  border: 1px solid #22e8f0;
+  border: 1px solid var(--accent-cyan);
   border-radius: 4px;
   padding: 0 12px 10px;
   margin: 0 0 10px;
@@ -310,16 +349,18 @@ button:hover {
 
 .info-value-box legend {
   padding: 0 8px;
-  color: #ffffff;
+  color: var(--btn-text-color);
+  font-weight: var(--btn-text-weight);
 }
 
 .info-value {
   font-family: "Cascadia Code", Consolas, monospace;
   font-size: 0.82em;
-  color: #ffffff;
+  color: var(--btn-text-color);
+  font-weight: var(--btn-text-weight);
   text-align: center;
   word-break: break-all;
-  background: rgba(18, 20, 32, 0.96);
+  background: var(--card-bg);
   border-radius: 4px;
   padding: 8px 10px;
   max-height: 220px;
@@ -328,15 +369,16 @@ button:hover {
 
 .info-note {
   font-size: 0.68em;
-  color: #ffffff;
+  color: var(--btn-text-color);
   font-style: italic;
 }
 
 .info-sequence {
   font-size: 0.85em;
-  color: #ffffff;
-  background: rgba(18, 20, 32, 0.96);
-  border: 1px solid #22e8f0;
+  color: var(--btn-text-color);
+  font-weight: var(--btn-text-weight);
+  background: var(--card-bg);
+  border: 1px solid var(--accent-cyan);
   border-radius: 4px;
   padding: 0 12px 10px;
   margin-bottom: 10px;
@@ -347,7 +389,8 @@ button:hover {
 
 .info-sequence legend {
   padding: 0 8px;
-  color: #ffffff;
+  color: var(--btn-text-color);
+  font-weight: var(--btn-text-weight);
 }
 
 .info-sequence-label {
@@ -365,7 +408,7 @@ button:hover {
 }
 
 .info-sequence-detail.named {
-  color: #f0c93a;
+  color: var(--text-heading);
   font-weight: 600;
 }
 
@@ -378,7 +421,7 @@ button:hover {
   display: flex;
   flex-direction: column;
   min-width: 190px;
-  background: rgba(18, 20, 32, 0.98);
+  background: var(--card-bg);
   border: 1px solid #3a3d55;
   border-radius: 8px;
   padding: 6px;
@@ -405,12 +448,13 @@ button:hover {
   padding: 8px 10px;
   border-radius: 5px;
   font-size: 13px;
-  color: #e8e8f0;
+  color: var(--btn-text-color);
+  font-weight: var(--btn-text-weight);
 }
 
 @media (hover: hover) and (pointer: fine) {
   #contextMenu button:hover {
-    background: #2a2f47;
+    background: var(--chip-hover-bg);
   }
 }
 
@@ -432,12 +476,12 @@ button:hover {
   max-width: min(420px, calc(100vw - 48px));
   max-height: calc(100dvh - 48px); /* dvh (not lvh) so this tracks Safari's currently-visible address bar and doesn't get clipped underneath it */
   overflow-y: auto;
-  background: rgba(18, 20, 32, 0.98);
-  border: 1px solid #22e8f0;
+  background: var(--card-bg);
+  border: 1px solid var(--accent-cyan);
   border-radius: 10px;
   padding: 20px 24px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 8px rgba(34, 232, 240, 0.7), 0 0 18px rgba(34, 232, 240, 0.45);
-  color: #e8e8f0;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  color: var(--text-primary);
   font-size: 15px;
   line-height: 1.5;
 }
@@ -453,7 +497,7 @@ button:hover {
 #helpModalCard h2 {
   margin: 0 0 12px;
   font-size: 18px;
-  color: #f0c93a;
+  color: var(--text-heading);
 }
 
 #helpModalCard p {

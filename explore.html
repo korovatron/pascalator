@@ -109,10 +109,20 @@
 }
 </script>
 
+<script>
+  (function () {
+    try {
+      if (localStorage.getItem("pascalator-theme") === "light") {
+        document.documentElement.setAttribute("data-theme", "light");
+      }
+    } catch (e) {}
+  })();
+</script>
 <link rel="stylesheet" href="src/style.css" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
 <script defer src="src/register-sw.js"></script>
+<script defer src="src/theme.js"></script>
 </head>
 <body>
   <div id="app">

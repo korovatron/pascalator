@@ -13,13 +13,46 @@
   --safe-area-right: env(safe-area-inset-right, 0px);
   --safe-area-bottom: env(safe-area-inset-bottom, 0px);
   --safe-area-left: env(safe-area-inset-left, 0px);
+
+  /* Light/dark theme toggle (src/theme.js sets data-theme="light" on <html>). These only affect
+     text/backgrounds that sit directly on the page (headings, subtitle, footer, plain body text) -
+     dark chips/cards (buttons, .card, step boxes, info card etc.) keep their own fixed dark
+     background + light text in both themes, so the interactive triangle/canvas UI and any teaching
+     colour-coding (e.g. the binomial expansion coefficient colours) are unaffected either way. */
+  --page-bg: #000000;
+  --text-primary: #e8e8f0;
+  --text-heading: #f0c93a;
+  --text-muted: #a9adc1;
+  --accent-cyan: #22e8f0;
+  --chip-bg: #171a28;
+  --chip-hover-bg: #2a2f47;
+  --card-bg: #12141f;
+  --heading-glow: none;
+  --badge-text: #1a1608;
+  --btn-text-color: var(--text-primary);
+  --btn-text-weight: 400;
+}
+
+[data-theme="light"] {
+  --page-bg: #d8dbe6;
+  --text-primary: #20232f;
+  --text-heading: #7a1fa2;
+  --text-muted: #585c74;
+  --accent-cyan: #0a5a5e;
+  --chip-bg: #eef0f7;
+  --chip-hover-bg: #c7cbdb;
+  --card-bg: #e4e7f0;
+  --heading-glow: none;
+  --badge-text: #ffffff;
+  --btn-text-color: #000000;
+  --btn-text-weight: 700;
 }
 
 html, body {
   margin: 0;
   min-height: 100%;
-  background: #000000;
-  color: #e8e8f0;
+  background: var(--page-bg);
+  color: var(--text-primary);
   font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   /* Stop Android Chrome's "font boosting" auto-inflating font-size on narrow text
      blocks it guesses are the main reading column - KaTeX's absolutely-positioned
@@ -55,25 +88,27 @@ a {
   font-size: 18px;
   font-weight: 600;
   margin: 0;
-  color: #f0c93a;
+  color: var(--text-heading);
+  text-shadow: var(--heading-glow);
   letter-spacing: 0.5px;
 }
 
 .home-link {
   font-size: 13px;
   line-height: 1.2;
-  color: #ffffff;
+  color: var(--btn-text-color);
+  font-weight: var(--btn-text-weight);
   text-decoration: none;
   padding: 5px 12px;
   border-radius: 6px;
-  border: 1px solid #22e8f0;
-  background: #171a28;
+  border: 1px solid var(--accent-cyan);
+  background: var(--chip-bg);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .home-link:hover {
-    background: #2a2f47;
-    color: #ffffff;
+    background: var(--chip-hover-bg);
+    color: var(--btn-text-color);
   }
 }
 
@@ -92,7 +127,8 @@ a {
   padding: 16px calc(24px + var(--safe-area-right, 0px)) calc(24px + var(--safe-area-bottom, 0px)) calc(24px + var(--safe-area-left, 0px));
   text-align: center;
   font-size: 16px;
-  color: #a9adc1;
+  color: var(--text-primary);
+  font-weight: 600;
 }
 
 .landing-footer p {
@@ -100,8 +136,15 @@ a {
 }
 
 .landing-footer a {
-  color: #22e8f0;
+  color: var(--accent-cyan);
+  font-weight: 700;
   text-decoration: none;
+}
+
+[data-theme="light"] .landing-footer a {
+  /* --accent-cyan is deliberately dark/muted here for border legibility - the footer link
+     wants a bolder, more eye-catching pop instead, so reuse the neon heading colour. */
+  color: var(--text-heading);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -124,7 +167,8 @@ a {
   justify-content: center;
   gap: 0.3em;
   font-size: clamp(32px, 6vw, 56px);
-  color: #f0c93a;
+  color: var(--text-heading);
+  text-shadow: var(--heading-glow);
   letter-spacing: 0.5px;
 }
 
@@ -137,8 +181,8 @@ a {
 
 .landing .subtitle {
   font-size: clamp(14px, 2vw, 18px);
-  font-weight: normal; /* countering the h1's default bold weight, now that this is a nested span rather than a separate <p> */
-  color: #ffffff;
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
 .narrow-break {
@@ -165,22 +209,22 @@ a {
   gap: 10px;
   width: 320px;
   text-decoration: none;
-  background: rgba(18, 20, 32, 0.96);
-  border: 1px solid #22e8f0;
+  background: var(--card-bg);
+  border: 1px solid var(--accent-cyan);
   border-radius: 12px;
   padding: 28px 26px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), 0 0 8px rgba(34, 232, 240, 0.5);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
   transition: box-shadow 0.15s ease, transform 0.15s ease;
 }
 
 .card:focus-visible {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), 0 0 18px rgba(34, 232, 240, 0.85);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
   transform: translateY(-2px);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .card:hover {
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), 0 0 18px rgba(34, 232, 240, 0.85);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
     transform: translateY(-2px);
   }
 }
@@ -201,13 +245,14 @@ a {
 .card h2 {
   margin: 0;
   font-size: 20px;
-  color: #ffffff;
+  color: var(--text-primary);
 }
 
 .card p {
   margin: 0;
   font-size: 14px;
-  color: #c6c9db;
+  font-weight: 600;
+  color: var(--text-muted);
   line-height: 1.5;
 }
 
@@ -217,15 +262,34 @@ a {
   font-weight: 600;
   letter-spacing: 0.5px;
   text-transform: uppercase;
-  color: #1a1608;
-  background: #f0c93a;
+  color: var(--badge-text);
+  background: var(--text-heading);
   padding: 3px 8px;
   border-radius: 999px;
 }
 
 .card.disabled .card-tag {
-  color: #a9adc1;
-  background: #2a2f47;
+  color: var(--text-muted);
+  background: var(--chip-hover-bg);
+}
+
+.theme-toggle {
+  font-size: 13px;
+  line-height: 1.2;
+  color: var(--btn-text-color);
+  font-weight: var(--btn-text-weight);
+  padding: 7px 16px;
+  border-radius: 6px;
+  border: 1px solid var(--accent-cyan);
+  background: var(--chip-bg);
+  cursor: pointer;
+  font-family: inherit;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .theme-toggle:hover {
+    background: var(--chip-hover-bg);
+  }
 }
 
 .placeholder-page {
@@ -242,13 +306,14 @@ a {
 .placeholder-page h2 {
   margin: 0;
   font-size: clamp(22px, 4vw, 32px);
-  color: #f0c93a;
+  color: var(--text-heading);
+  text-shadow: var(--heading-glow);
 }
 
 .placeholder-page p {
   margin: 0;
   max-width: 480px;
-  color: #a9adc1;
+  color: var(--text-muted);
   font-size: 15px;
   line-height: 1.6;
 }

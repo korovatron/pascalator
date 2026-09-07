@@ -7,7 +7,7 @@
 // activate handler deletes any cache not matching the current name, and skipWaiting()/
 // clients.claim() below make the new worker take over immediately (src/register-sw.js then
 // reloads the page once control changes, so users always get the latest version automatically).
-const CACHE_NAME = "pascalator-v1.5.9";
+const CACHE_NAME = "pascalator-v1.7.9";
 
 const PRECACHE_URLS = [
   "./",
@@ -19,6 +19,7 @@ const PRECACHE_URLS = [
   "src/portal.css",
   "src/expansion.css",
   "src/register-sw.js",
+  "src/theme.js",
   "src/main.js",
   "src/renderer.js",
   "src/viewport.js",
