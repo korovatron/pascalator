@@ -1,7 +1,8 @@
 {
-	"name": "pascalator",
-	"compatibility_date": "2026-09-19",
-	"assets": {
-		"directory": "./"
-	}
+    "name": "pascalator",
+    "compatibility_date": "2026-09-19",
+    "assets": {
+        "directory": "./",
+        "html_handling": "none"
+    }
 }
